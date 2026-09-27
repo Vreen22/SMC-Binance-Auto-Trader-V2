@@ -2,14 +2,16 @@ import os
 import time
 import hmac
 import hashlib
+from pathlib import Path
 from decimal import Decimal, ROUND_DOWN
 from urllib.parse import urlencode
 
 import httpx
-from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -17,14 +19,15 @@ API_KEY = os.getenv("BINANCE_API_KEY", "")
 API_SECRET = os.getenv("BINANCE_API_SECRET", "")
 
 TESTNET = os.getenv("BINANCE_TESTNET", "true").lower() == "true"
-MAX_USDT = float(os.getenv("MAX_USDT_PER_TRADE", "20"))
-LEVERAGE = int(os.getenv("LEVERAGE", "1"))
 
 BASE_URL = (
     "https://testnet.binancefuture.com"
     if TESTNET
     else "https://fapi.binance.com"
 )
+
+MAX_USDT = float(os.getenv("MAX_USDT_PER_TRADE", "20"))
+LEVERAGE = int(os.getenv("LEVERAGE", "1"))
 
 app = FastAPI(title="SMC Binance Auto Trader V2")
 
@@ -35,23 +38,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# -------------------------
-# BOT STATE
-# -------------------------
+# Project root
+ROOT = Path(__file__).resolve().parent.parent
 
+# Runtime state
 state = {
     "auto": False,
     "emergency": False,
-    "active_trade": None,
-    "last_signal": None,
+    "active": None,
+    "last": None,
 }
 
 
-# -------------------------
-# DATA MODELS
-# -------------------------
+# =========================================================
+# FRONTEND
+# =========================================================
 
-class AutoTrade(BaseModel):
+@app.get("/", include_in_schema=False)
+async def home():
+    return FileResponse(ROOT / "index.html")
+
+
+# =========================================================
+# MODELS
+# =========================================================
+
+class Auto(BaseModel):
     enabled: bool
 
 
@@ -66,15 +78,18 @@ class Signal(BaseModel):
     candle_time: int
 
 
-# -------------------------
-# BINANCE SIGNATURE
-# -------------------------
+# =========================================================
+# BINANCE SIGNING
+# =========================================================
 
 def signed_params(params=None):
-    if params is None:
-        params = {}
+    if not API_KEY or not API_SECRET:
+        raise HTTPException(
+            status_code=500,
+            detail="Binance API credentials are not configured."
+        )
 
-    params = dict(params)
+    params = dict(params or {})
 
     params["timestamp"] = int(time.time() * 1000)
     params["recvWindow"] = 5000
@@ -82,9 +97,9 @@ def signed_params(params=None):
     query = urlencode(params)
 
     signature = hmac.new(
-        API_SECRET.encode("utf-8"),
-        query.encode("utf-8"),
-        hashlib.sha256,
+        API_SECRET.encode(),
+        query.encode(),
+        hashlib.sha256
     ).hexdigest()
 
     params["signature"] = signature
@@ -92,152 +107,126 @@ def signed_params(params=None):
     return params
 
 
-# -------------------------
+# =========================================================
 # BINANCE REQUEST
-# -------------------------
+# =========================================================
 
 async def binance_request(method, path, params=None):
 
-    if not API_KEY or not API_SECRET:
-        raise HTTPException(
-            status_code=500,
-            detail="Binance API credentials are missing."
-        )
+    signed = signed_params(params)
 
-    headers = {
-        "X-MBX-APIKEY": API_KEY
-    }
-
-    async with httpx.AsyncClient(timeout=20) as client:
+    async with httpx.AsyncClient(timeout=15) as client:
 
         response = await client.request(
             method,
             BASE_URL + path,
-            params=signed_params(params or {}),
-            headers=headers,
+            params=signed,
+            headers={
+                "X-MBX-APIKEY": API_KEY
+            }
         )
 
     if response.status_code >= 400:
+
         raise HTTPException(
             status_code=response.status_code,
-            detail=response.text,
+            detail=response.text
         )
 
     return response.json()
 
 
-# -------------------------
+# =========================================================
 # EXCHANGE INFO
-# -------------------------
+# =========================================================
 
-async def get_symbol_info(symbol):
+async def exchange_info(symbol):
 
-    async with httpx.AsyncClient(timeout=20) as client:
+    async with httpx.AsyncClient(timeout=15) as client:
 
         response = await client.get(
             BASE_URL + "/fapi/v1/exchangeInfo"
         )
 
     if response.status_code >= 400:
+
         raise HTTPException(
             status_code=response.status_code,
-            detail=response.text,
+            detail=response.text
         )
 
     data = response.json()
 
     for item in data["symbols"]:
+
         if item["symbol"] == symbol:
             return item
 
     raise HTTPException(
         status_code=400,
-        detail=f"Unknown Futures symbol: {symbol}"
+        detail="Unknown Futures symbol"
     )
 
 
-# -------------------------
+# =========================================================
 # QUANTITY ROUNDING
-# -------------------------
+# =========================================================
 
-def floor_quantity(quantity, step):
+def floor_quantity(quantity, step_size):
 
-    q = Decimal(str(quantity))
-    s = Decimal(str(step))
+    a = Decimal(str(quantity))
+    b = Decimal(str(step_size))
 
     result = (
-        q / s
+        a / b
     ).to_integral_value(
         rounding=ROUND_DOWN
-    ) * s
+    ) * b
 
     return float(result)
 
 
-# -------------------------
-# HEALTH
-# -------------------------
-
-@app.get("/")
-async def root():
-
-    return {
-        "bot": "SMC Binance Auto Trader V2",
-        "status": "online",
-        "mode": "TESTNET" if TESTNET else "LIVE",
-    }
-
-
-@app.get("/health")
-async def health():
-
-    return {
-        "ok": True,
-        "mode": "TESTNET" if TESTNET else "LIVE",
-    }
-
-
-# -------------------------
-# BOT STATUS
-# -------------------------
+# =========================================================
+# STATUS
+# =========================================================
 
 @app.get("/api/status")
 async def status():
 
     return {
         "ok": True,
-        "mode": "testnet" if TESTNET else "live",
+        "mode": "TESTNET" if TESTNET else "LIVE",
         "auto": state["auto"],
         "emergency": state["emergency"],
-        "active_trade": state["active_trade"],
+        "active": state["active"],
     }
 
 
-# -------------------------
-# AUTO TRADE ON/OFF
-# -------------------------
+# =========================================================
+# AUTO TRADE
+# =========================================================
 
 @app.post("/api/auto")
-async def set_auto(data: AutoTrade):
+async def auto_trade(settings: Auto):
 
-    if data.enabled and state["emergency"]:
+    if settings.enabled and state["emergency"]:
 
         raise HTTPException(
             status_code=409,
-            detail="Emergency stop is active. Restart the backend first."
+            detail="Emergency stop is enabled."
         )
 
-    state["auto"] = data.enabled
+    state["auto"] = settings.enabled
 
     return {
         "ok": True,
-        "auto": state["auto"],
+        "enabled": state["auto"]
     }
 
 
-# -------------------------
+# =========================================================
 # EMERGENCY STOP
-# -------------------------
+# =========================================================
 
 @app.post("/api/emergency-stop")
 async def emergency_stop():
@@ -247,98 +236,83 @@ async def emergency_stop():
 
     return {
         "ok": True,
-        "message": "Emergency stop enabled.",
+        "emergency": True,
+        "auto": False
     }
 
 
-# -------------------------
-# OPEN AUTO TRADE
-# -------------------------
+# =========================================================
+# EXECUTE SIGNAL
+# =========================================================
 
 @app.post("/api/execute-signal")
 async def execute_signal(signal: Signal):
 
-    # Safety checks
     if state["emergency"]:
 
         raise HTTPException(
             status_code=409,
-            detail="Emergency stop is enabled."
+            detail="Emergency stop enabled."
         )
 
     if not state["auto"]:
 
         raise HTTPException(
             status_code=409,
-            detail="AUTO TRADE is OFF."
+            detail="AUTO TRADE OFF."
         )
 
-    if state["active_trade"] is not None:
+    if state["active"]:
 
         raise HTTPException(
             status_code=409,
-            detail="A trade is already active."
+            detail="One trade is already active."
         )
 
-    if signal.side not in ["BUY", "SELL"]:
+    if signal.side not in ("BUY", "SELL"):
 
         raise HTTPException(
             status_code=400,
-            detail="Side must be BUY or SELL."
+            detail="Invalid side."
         )
 
     if signal.quantity_usdt > MAX_USDT:
 
         raise HTTPException(
             status_code=400,
-            detail=f"Trade size exceeds MAX_USDT_PER_TRADE={MAX_USDT}"
+            detail=f"Trade size exceeds {MAX_USDT} USDT."
         )
 
-    # Prevent duplicate signal
-    signal_id = (
+    signal_key = (
         f"{signal.symbol}:"
         f"{signal.side}:"
         f"{signal.candle_time}"
     )
 
-    if state["last_signal"] == signal_id:
+    if state["last"] == signal_key:
 
         raise HTTPException(
             status_code=409,
-            detail="This signal was already executed."
+            detail="Duplicate signal."
         )
 
-    # Get Binance symbol information
-    symbol_info = await get_symbol_info(signal.symbol)
-
-    lot_filter = next(
-        (
-            f
-            for f in symbol_info["filters"]
-            if f["filterType"] == "LOT_SIZE"
-        ),
-        None,
+    # Get exchange information
+    symbol_info = await exchange_info(
+        signal.symbol
     )
 
-    if lot_filter is None:
-
-        raise HTTPException(
-            status_code=500,
-            detail="LOT_SIZE filter not found."
-        )
+    lot_filter = next(
+        item
+        for item in symbol_info["filters"]
+        if item["filterType"] == "LOT_SIZE"
+    )
 
     step_size = float(
         lot_filter["stepSize"]
     )
 
-    # Calculate quantity
-    raw_quantity = (
-        signal.quantity_usdt /
-        signal.entry
-    )
-
     quantity = floor_quantity(
-        raw_quantity,
+        signal.quantity_usdt / signal.entry,
         step_size
     )
 
@@ -346,26 +320,20 @@ async def execute_signal(signal: Signal):
 
         raise HTTPException(
             status_code=400,
-            detail="Calculated quantity is zero."
+            detail="Quantity too small."
         )
 
-    # -------------------------
-    # SET LEVERAGE
-    # -------------------------
-
+    # Set leverage
     await binance_request(
         "POST",
         "/fapi/v1/leverage",
         {
             "symbol": signal.symbol,
-            "leverage": LEVERAGE,
-        },
+            "leverage": LEVERAGE
+        }
     )
 
-    # -------------------------
-    # OPEN MARKET POSITION
-    # -------------------------
-
+    # Market entry
     entry_order = await binance_request(
         "POST",
         "/fapi/v1/order",
@@ -374,21 +342,17 @@ async def execute_signal(signal: Signal):
             "side": signal.side,
             "type": "MARKET",
             "quantity": quantity,
-            "newOrderRespType": "RESULT",
-        },
+            "newOrderRespType": "RESULT"
+        }
     )
 
-    # Opposite side closes the position
     close_side = (
         "SELL"
         if signal.side == "BUY"
         else "BUY"
     )
 
-    # -------------------------
-    # STOP LOSS
-    # -------------------------
-
+    # Stop Loss
     sl_order = await binance_request(
         "POST",
         "/fapi/v1/order",
@@ -398,15 +362,12 @@ async def execute_signal(signal: Signal):
             "type": "STOP_MARKET",
             "stopPrice": signal.sl,
             "closePosition": "true",
-            "workingType": "MARK_PRICE",
-        },
+            "workingType": "MARK_PRICE"
+        }
     )
 
-    # -------------------------
-    # TP2 AUTO CLOSE
-    # -------------------------
-
-    tp2_order = await binance_request(
+    # TP2
+    tp_order = await binance_request(
         "POST",
         "/fapi/v1/order",
         {
@@ -415,55 +376,51 @@ async def execute_signal(signal: Signal):
             "type": "TAKE_PROFIT_MARKET",
             "stopPrice": signal.tp2,
             "closePosition": "true",
-            "workingType": "MARK_PRICE",
-        },
+            "workingType": "MARK_PRICE"
+        }
     )
 
-    # -------------------------
-    # SAVE ACTIVE TRADE
-    # -------------------------
-
-    state["active_trade"] = {
+    state["active"] = {
         "symbol": signal.symbol,
         "side": signal.side,
-        "quantity": quantity,
-        "entry_order_id": entry_order.get("orderId"),
-        "sl_order_id": sl_order.get("orderId"),
-        "tp2_order_id": tp2_order.get("orderId"),
-        "entry": signal.entry,
+        "qty": quantity,
+        "entry_order": entry_order.get("orderId"),
+        "sl_order": sl_order.get("orderId"),
+        "tp2_order": tp_order.get("orderId"),
+        "entry_price": signal.entry,
         "sl": signal.sl,
         "tp1": signal.tp1,
         "tp2": signal.tp2,
     }
 
-    state["last_signal"] = signal_id
+    state["last"] = signal_key
 
     return {
         "ok": True,
-        "message": "Trade opened with automatic SL and TP2.",
-        "trade": state["active_trade"],
+        "mode": "TESTNET" if TESTNET else "LIVE",
+        "active": state["active"]
     }
 
 
-# -------------------------
+# =========================================================
 # MANUAL CLOSE
-# -------------------------
+# =========================================================
 
 @app.post("/api/close")
 async def close_trade():
 
-    if state["active_trade"] is None:
+    if not state["active"]:
 
         return {
             "ok": True,
             "message": "No active trade."
         }
 
-    trade = state["active_trade"]
+    active = state["active"]
 
     close_side = (
         "SELL"
-        if trade["side"] == "BUY"
+        if active["side"] == "BUY"
         else "BUY"
     )
 
@@ -471,17 +428,26 @@ async def close_trade():
         "POST",
         "/fapi/v1/order",
         {
-            "symbol": trade["symbol"],
+            "symbol": active["symbol"],
             "side": close_side,
             "type": "MARKET",
-            "quantity": trade["quantity"],
-        },
+            "quantity": active["qty"]
+        }
     )
 
-    state["active_trade"] = None
+    state["active"] = None
+
+    return result
+
+
+# =========================================================
+# HEALTH
+# =========================================================
+
+@app.get("/health")
+async def health():
 
     return {
         "ok": True,
-        "message": "Trade closed.",
-        "result": result,
+        "mode": "TESTNET" if TESTNET else "LIVE"
     }
