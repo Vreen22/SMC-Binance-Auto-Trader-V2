@@ -2,1575 +2,848 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#050806">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#03070a">
 <title>SMC Binance Auto Trader V2</title>
-
 <style>
-*{box-sizing:border-box}
-
-body{
-    margin:0;
-    background:#050806;
-    color:#eef7ef;
-    font-family:Arial,sans-serif;
-}
-
-.container{
-    max-width:900px;
-    margin:auto;
-    padding:22px;
-}
-
-h1{
-    font-size:30px;
-    margin-bottom:22px;
-}
-
-.controls{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-}
-
-select,input,button{
-    width:100%;
-    padding:15px;
-    border-radius:14px;
-    border:1px solid #295333;
-    background:#0b160e;
-    color:#fff;
-    font-size:16px;
-}
-
-button{
-    cursor:pointer;
-}
-
-button:hover{
-    background:#122519;
-}
-
-.card{
-    margin-top:18px;
-    padding:22px;
-    border:1px solid #214a2a;
-    border-radius:20px;
-    background:#09110c;
-}
-
-.label{
-    font-size:18px;
-    font-weight:bold;
-}
-
-.value{
-    margin-top:8px;
-    font-size:26px;
-}
-
-.online{color:#69e991}
-.wait{color:#ffd76b}
-.buy{color:#45e879}
-.sell{color:#ff6767}
-
-.confirm{
-    line-height:1.9;
-    font-size:16px;
-}
-
-.log{
-    background:#000;
-    padding:15px;
-    min-height:130px;
-    font-family:monospace;
-    white-space:pre-wrap;
-    overflow:auto;
-}
-
-.row{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-}
-
-.small{
-    font-size:13px;
-    color:#9db0a1;
-}
-
-.statusBox{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-}
-
-.search{
-    margin-top:12px;
-}
-
-@media(max-width:650px){
-    .controls,
-    .row,
-    .statusBox{
-        grid-template-columns:1fr;
-    }
-
-    h1{
-        font-size:25px;
-    }
-}
+:root{--bg:#03070a;--panel:#071118;--line:#123b50;--text:#eaf5f8;--muted:#8fa7b1;--green:#00f07a;--red:#ff3145;--blue:#18a8ff;--yellow:#ffd21c;--cyan:#00d9ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#0b2430 0,#03070a 42%);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+.app{max-width:1100px;margin:auto;padding:14px 14px 34px}.top{display:flex;align-items:center;gap:12px;padding:7px 2px 14px;border-bottom:1px solid #0d2734}
+.logo{font-size:24px;font-weight:900;letter-spacing:.2px}.crown{color:#ffd21c}.pill{padding:7px 13px;border-radius:10px;border:1px solid #0877a8;background:#062335;color:#21c7ff;font-weight:800}.online{margin-left:auto;color:var(--green);font-weight:800}
+.controls{display:grid;grid-template-columns:1.35fr .7fr .7fr .9fr;gap:10px;padding:12px 0}.field label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}.field input,.field select{width:100%;height:46px;background:#07131a;border:1px solid #164258;border-radius:11px;color:#fff;padding:0 13px;font-size:15px;outline:none}
+.switch{display:flex;height:46px;border:1px solid #164258;border-radius:11px;overflow:hidden}.switch button{flex:1;border:0;background:#07131a;color:#78909a;font-weight:800}.switch .active{background:#00b957;color:#fff}
+.checks{display:flex;flex-wrap:wrap;gap:9px;padding:4px 0 13px;border-bottom:1px solid #0d2734}.check{font-size:13px;color:#d4e2e6}.check b{display:inline-grid;place-items:center;width:19px;height:19px;border-radius:5px;background:#10c86a;color:#001b0d;margin-right:5px}
+.layout{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(260px,.9fr);gap:14px;margin-top:14px}.panel{background:linear-gradient(180deg,#071118,#050d12);border:1px solid #103b4d;border-radius:17px;box-shadow:0 0 22px #00141d80;padding:14px}.chartHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}.chartTitle{font-size:16px;font-weight:800}.price{color:var(--green);font-size:14px}.chart{height:390px;border:1px solid #0d3444;border-radius:12px;overflow:hidden;background:#03090d}.chart canvas{width:100%;height:100%;display:block}
+.signal{min-height:390px;border-radius:17px;border:1px solid #0e5832;background:linear-gradient(160deg,#06140d,#03100a);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:18px;position:relative;overflow:hidden}.signal.sell{border-color:#6b1622;background:linear-gradient(160deg,#18080b,#0d0305)}.signalTitle{font-size:30px;font-weight:1000;letter-spacing:-1px}.signal.buy .signalTitle{color:var(--green)}.signal.sell .signalTitle{color:#ff5365}.arrow{width:180px;height:170px;margin:10px 0;position:relative}.arrow:before{content:"";position:absolute;left:45px;top:65px;width:95px;height:42px;border-radius:8px;transform:rotate(-38deg);background:linear-gradient(90deg,#00a94e,#24ff88);box-shadow:0 0 30px #00f07a}.arrow:after{content:"";position:absolute;right:12px;top:22px;border-left:42px solid #24ff88;border-top:30px solid transparent;border-bottom:30px solid transparent;transform:rotate(-38deg);filter:drop-shadow(0 0 15px #00f07a)}.sell .arrow:before{background:linear-gradient(90deg,#c8172b,#ff5262);box-shadow:0 0 30px #ff3145;transform:rotate(38deg)}.sell .arrow:after{border-left-color:#ff5262;transform:rotate(38deg);top:105px}.conf{font-size:13px;color:#9fb4bc}.conf strong{display:block;font-size:36px;color:#eaf5f8;margin:5px}.trend{font-weight:900;font-size:18px;color:var(--green)}.sell .trend{color:#ff5365}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}.metric{padding:14px;border:1px solid #124158;border-radius:14px;background:#061017}.metric:nth-child(2){border-color:#6b1622}.metric:nth-child(3),.metric:nth-child(4){border-color:#087544}.metric small{display:block;color:#91a8b1}.metric strong{display:block;font-size:21px;margin-top:8px}.blueText{color:#27b6ff}.redText{color:#ff5365}.greenText{color:#20f184}
+.bottom{display:grid;grid-template-columns:1.2fr .8fr .7fr;gap:14px;margin-top:14px}.confirm h2,.log h2{font-size:19px;margin:0 0 12px}.confirmRow{display:flex;justify-content:space-between;padding:8px 0;color:#d7e4e8;border-bottom:1px solid #0d2834}.ok{color:var(--green);font-weight:800}.wait{color:var(--yellow);font-weight:800}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions button{min-height:105px;border-radius:16px;border:1px solid #087d45;font-size:22px;font-weight:1000;color:#fff;background:linear-gradient(160deg,#0ad868,#048a40);box-shadow:0 0 20px #00f07a33}.actions .sellBtn{border-color:#9b1828;background:linear-gradient(160deg,#ff3448,#a30f20);box-shadow:0 0 20px #ff314533}.mini{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.mini button{min-height:52px;border:1px solid #164258;border-radius:12px;background:#07131a;color:#dce8eb;font-weight:800}.mini .stop{border-color:#8d1b28;color:#ff6674}.status h3{margin:0 0 13px}.stat{padding:8px 0;display:flex;justify-content:space-between}.logBox{background:#020506;border-radius:10px;padding:12px;min-height:150px;color:#b9cbd1;font:12px/1.55 monospace;white-space:pre-wrap;overflow:auto}
+.footer{margin-top:14px;color:#8fa7b1;font-size:12px;text-align:center}
+@media(max-width:800px){.controls{grid-template-columns:1fr 1fr}.layout{grid-template-columns:1fr}.signal{min-height:300px}.bottom{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}.chart{height:320px}}
+@media(max-width:480px){.app{padding:9px}.logo{font-size:19px}.online{font-size:12px}.controls{grid-template-columns:1fr 1fr}.metrics{grid-template-columns:1fr 1fr}.check{font-size:12px}}
 </style>
 </head>
-
 <body>
+<div class="app">
 
-<div class="container">
-
-<h1>SMC Binance Auto Trader V2</h1>
+<div class="top">
+<div class="logo"><span class="crown">♛</span> SMC Binance Auto Trader V2</div>
+<span class="pill" id="modePill">DEMO</span>
+<span class="online">● Backend: <span id="backend">CHECKING</span></span>
+</div>
 
 <div class="controls">
-
-    <div>
-        <div class="small">BINANCE FUTURES SYMBOL</div>
-        <select id="symbol"></select>
-        <input
-            class="search"
-            id="symbolSearch"
-            placeholder="Search symbol e.g. ETH"
-        >
-    </div>
-
-    <div>
-        <div class="small">TIMEFRAME</div>
-        <select id="timeframe">
-            <option value="1m">1 Min</option>
-            <option value="5m" selected>5 Min</option>
-            <option value="15m">15 Min</option>
-            <option value="30m">30 Min</option>
-            <option value="1h">1 Hour</option>
-            <option value="2h">2 Hours</option>
-            <option value="4h">4 Hours</option>
-        </select>
-    </div>
-
+<div class="field">
+<label>Symbol</label>
+<div style="display:flex;gap:7px">
+<select id="symbol" style="flex:1"></select>
+<button id="searchBtn" style="width:52px;border:1px solid #164258;border-radius:11px;background:#07131a;color:#fff;font-size:20px">⌕</button>
+</div>
+<input id="search" placeholder="Search symbol..." style="margin-top:6px;height:34px;font-size:13px">
 </div>
 
-<div class="row" style="margin-top:12px">
-
-    <input
-        id="tradeSize"
-        type="number"
-        value="20"
-        min="1"
-        max="20"
-        step="1"
-        placeholder="USDT Trade Size"
-    >
-
-    <button id="testBackend">
-        Test Backend
-    </button>
-
+<div class="field">
+<label>Timeframe</label>
+<select id="tf">
+<option value="1m">1 Min</option>
+<option value="5m" selected>5 Min</option>
+<option value="15m">15 Min</option>
+<option value="30m">30 Min</option>
+<option value="1h">1 Hour</option>
+<option value="2h">2 Hour</option>
+<option value="4h">4 Hour</option>
+</select>
 </div>
 
-<div class="row" style="margin-top:12px">
-
-    <button id="emergency">
-        EMERGENCY STOP
-    </button>
-
-    <button id="autoBtn">
-        AUTO TRADE: OFF
-    </button>
-
+<div class="field">
+<label>Trade Size (USDT)</label>
+<input id="size" type="number" value="20" min="1" max="20">
 </div>
 
-<div class="row" style="margin-top:12px">
-
-    <button id="voiceBtn">
-        VOICE: ON
-    </button>
-
-    <button id="refreshSymbols">
-        REFRESH BINANCE SYMBOLS
-    </button>
-
+<div class="field">
+<label>Mode</label>
+<div class="switch">
+<button id="demo" class="active">DEMO</button>
+<button disabled>LIVE</button>
+</div>
+</div>
 </div>
 
-
-<div class="card">
-    <div class="label">Backend</div>
-    <div class="value online" id="backend">
-        CHECKING...
-    </div>
+<div class="checks">
+<span class="check"><b>✓</b>EMA 50/200</span>
+<span class="check"><b>✓</b>RSI 14</span>
+<span class="check"><b>✓</b>FVG</span>
+<span class="check"><b>✓</b>Liquidity</span>
+<span class="check"><b>✓</b>BOS/CHoCH</span>
+<span class="check"><b>✓</b>ATR 14</span>
+<span class="check" style="margin-left:auto">
+AUTO TRADE
+<button id="auto" style="border:1px solid #7c202b;background:#230b0f;color:#ff6b79;border-radius:14px;padding:4px 12px;font-weight:900">OFF</button>
+</span>
 </div>
 
+<div class="layout">
 
-<div class="statusBox">
-
-    <div class="card">
-        <div class="label">Mode</div>
-        <div class="value" id="mode">—</div>
-    </div>
-
-    <div class="card">
-        <div class="label">Selected Symbol</div>
-        <div class="value" id="selectedSymbol">—</div>
-    </div>
-
+<div class="panel">
+<div class="chartHead">
+<div>
+<span class="chartTitle" id="chartSymbol">BTCUSDT · 5 · Binance</span><br>
+<span class="price" id="price">—</span>
+</div>
+<span class="muted" id="chartMode">LIVE MARKET DATA</span>
+</div>
+<div class="chart"><canvas id="canvas"></canvas></div>
 </div>
 
-
-<div class="card">
-    <div class="label">Trend</div>
-    <div class="value" id="trend">—</div>
+<div id="signalCard" class="signal">
+<div id="signalTitle" class="signalTitle">WAITING — SMC</div>
+<div class="arrow"></div>
+<div class="conf">
+Confidence
+<strong id="confidence">—</strong>
+Trend <span id="trend" class="trend">—</span>
 </div>
-
-
-<div class="card">
-    <div class="label">RSI</div>
-    <div class="value" id="rsi">—</div>
-</div>
-
-
-<div class="card">
-    <div class="label">SMC</div>
-    <div class="value wait" id="signal">
-        NO SIGNAL
-    </div>
-</div>
-
-
-<div class="card">
-    <div class="label">Entry</div>
-    <div class="value" id="entry">—</div>
-</div>
-
-<div class="card">
-    <div class="label">SL</div>
-    <div class="value" id="sl">—</div>
-</div>
-
-<div class="card">
-    <div class="label">TP1</div>
-    <div class="value" id="tp1">—</div>
-</div>
-
-<div class="card">
-    <div class="label">TP2</div>
-    <div class="value" id="tp2">—</div>
-</div>
-
-
-<div class="card">
-
-    <div class="label">
-        SMC Confirmation
-    </div>
-
-    <div class="confirm">
-
-        Liquidity Grab:
-        <span id="liq">WAITING</span><br>
-
-        BOS / CHoCH:
-        <span id="bos">WAITING</span><br>
-
-        FVG:
-        <span id="fvg">WAITING</span><br>
-
-        EMA 50 / 200:
-        <span id="ema">WAITING</span><br>
-
-        RSI:
-        <span id="rsiConfirm">WAITING</span>
-
-    </div>
-
-</div>
-
-
-<div class="card">
-
-    <div class="label">
-        System Log
-    </div>
-
-    <div class="log" id="log"></div>
-
-</div>
-
-
-<div class="card small">
-
-    TESTNET / DEMO FIRST — Binance API credentials belong only
-    in backend environment variables. Never put API keys or
-    secrets in GitHub or this page.
-
 </div>
 
 </div>
 
+<div class="metrics">
+
+<div class="metric">
+<small>Entry</small>
+<strong id="entry" class="blueText">—</strong>
+</div>
+
+<div class="metric">
+<small>Stop Loss</small>
+<strong id="sl" class="redText">—</strong>
+</div>
+
+<div class="metric">
+<small>TP1</small>
+<strong id="tp1" class="greenText">—</strong>
+</div>
+
+<div class="metric">
+<small>TP2</small>
+<strong id="tp2" class="greenText">—</strong>
+</div>
+
+<div class="metric">
+<small>R:R</small>
+<strong id="rr">1:—</strong>
+</div>
+
+<div class="metric">
+<small>RSI 14</small>
+<strong id="rsi">—</strong>
+</div>
+
+<div class="metric">
+<small>ATR 14</small>
+<strong id="atr">—</strong>
+</div>
+
+<div class="metric">
+<small>Price</small>
+<strong id="price2">—</strong>
+</div>
+
+</div>
+
+<div class="bottom">
+
+<div class="panel confirm">
+<h2>SMC Confirmations</h2>
+
+<div class="confirmRow">
+Liquidity Grab <span id="liq" class="wait">WAITING</span>
+</div>
+
+<div class="confirmRow">
+BOS / CHoCH <span id="bos" class="wait">WAITING</span>
+</div>
+
+<div class="confirmRow">
+FVG <span id="fvg" class="wait">WAITING</span>
+</div>
+
+<div class="confirmRow">
+EMA 50 / 200 <span id="ema" class="wait">WAITING</span>
+</div>
+
+<div class="confirmRow">
+RSI 14 <span id="rsiC" class="wait">WAITING</span>
+</div>
+
+</div>
+
+<div class="panel">
+<div class="actions">
+<button id="buyBtn">↑<br>BUY</button>
+<button id="sellBtn" class="sellBtn">↓<br>SELL</button>
+</div>
+
+<div class="mini">
+<button id="voice">🔊 Voice ON</button>
+<button id="stop" class="stop">■ Emergency STOP</button>
+</div>
+</div>
+
+<div class="panel status">
+<h3>Market Status</h3>
+
+<div class="stat">
+<span>Volatility</span>
+<b class="greenText">NORMAL</b>
+</div>
+
+<div class="stat">
+<span>Volume</span>
+<b id="vol">—</b>
+</div>
+
+<div class="stat">
+<span>Spread</span>
+<b class="greenText">LOW</b>
+</div>
+
+<button id="test" style="width:100%;margin-top:12px;height:45px;border:1px solid #164258;border-radius:11px;background:#07131a;color:#dce8eb;font-weight:800">
+Test Backend
+</button>
+
+</div>
+</div>
+
+<div class="panel log">
+<h2>System Log</h2>
+<div id="log" class="logBox"></div>
+</div>
+
+<div class="footer">
+DEMO FIRST — API keys remain only in backend environment variables.
+AUTO TRADE stays OFF until you enable it.
+</div>
+
+</div>
 
 <script>
+const API=location.origin;
+const $=x=>document.getElementById(x);
 
-const BACKEND =
-    window.location.origin;
+let symbols=[];
+let candles=[];
+let voice=true;
+let auto=false;
+let lastKey="";
 
-const BINANCE_PUBLIC =
-    "https://fapi.binance.com";
-
-
-let symbols = [];
-
-let autoTrade = false;
-
-let voice = true;
-
-let lastSignalKey = null;
-
-let currentSymbol = "BTCUSDT";
-
-
-/* =========================================================
-   LOG
-========================================================= */
-
-function log(message){
-
-    const box =
-        document.getElementById("log");
-
-    const time =
-        new Date().toLocaleTimeString();
-
-    box.textContent +=
-        `[${time}] ${message}\n`;
-
-    box.scrollTop =
-        box.scrollHeight;
+function log(x){
+$("log").textContent=
+`[${new Date().toLocaleTimeString()}] ${x}\n`+
+$("log").textContent.slice(0,6000)
 }
 
-
-/* =========================================================
-   VOICE
-========================================================= */
-
-function speak(text){
-
-    if(!voice) return;
-
-    if(
-        "speechSynthesis"
-        in window
-    ){
-
-        speechSynthesis.cancel();
-
-        const u =
-            new SpeechSynthesisUtterance(
-                text
-            );
-
-        u.rate = 1;
-
-        speechSynthesis.speak(u);
-    }
+function setC(id,on){
+$(id).textContent=on?"Confirmed":"WAITING";
+$(id).className=on?"ok":"wait"
 }
-
-
-/* =========================================================
-   LOAD BINANCE FUTURES SYMBOLS
-========================================================= */
 
 async function loadSymbols(){
+try{
+log("Loading Binance Futures symbols...");
 
-    try{
+let d=await(
+await fetch("https://fapi.binance.com/fapi/v1/exchangeInfo")
+).json();
 
-        log(
-            "Loading Binance Futures symbols..."
-        );
+symbols=d.symbols
+.filter(x=>
+x.status==="TRADING"&&
+x.quoteAsset==="USDT"&&
+x.contractType==="PERPETUAL"
+)
+.map(x=>x.symbol)
+.sort();
 
-        const response =
-            await fetch(
-                BINANCE_PUBLIC +
-                "/fapi/v1/exchangeInfo"
-            );
+renderSymbols();
 
-        const data =
-            await response.json();
+log(`Loaded ${symbols.length} active USDT perpetual symbols.`);
 
-        symbols =
-            data.symbols
-            .filter(s =>
-                s.status === "TRADING" &&
-                s.quoteAsset === "USDT" &&
-                s.contractType === "PERPETUAL"
-            )
-            .map(s => s.symbol)
-            .sort();
-
-        renderSymbols();
-
-        log(
-            `Loaded ${symbols.length} active USDT perpetual symbols.`
-        );
-
-    }catch(error){
-
-        log(
-            "Symbol loading error: " +
-            error.message
-        );
-
-    }
-
+}catch(e){
+log("Symbol error: "+e.message)
 }
-
-
-/* =========================================================
-   RENDER SYMBOL DROPDOWN
-========================================================= */
+}
 
 function renderSymbols(){
+let q=$("search").value.toUpperCase();
+let cur=$("symbol").value||"BTCUSDT";
+let a=symbols.filter(s=>s.includes(q));
 
-    const select =
-        document.getElementById(
-            "symbol"
-        );
+$("symbol").innerHTML=
+a.map(s=>`<option>${s}</option>`).join("");
 
-    const search =
-        document.getElementById(
-            "symbolSearch"
-        ).value
-        .trim()
-        .toUpperCase();
-
-    const filtered =
-        symbols.filter(
-            s =>
-            !search ||
-            s.includes(search)
-        );
-
-    select.innerHTML = "";
-
-    filtered.forEach(symbol => {
-
-        const option =
-            document.createElement(
-                "option"
-            );
-
-        option.value = symbol;
-
-        option.textContent = symbol;
-
-        if(symbol === currentSymbol){
-
-            option.selected = true;
-        }
-
-        select.appendChild(option);
-
-    });
-
-    if(
-        filtered.length &&
-        !filtered.includes(
-            currentSymbol
-        )
-    ){
-
-        currentSymbol =
-            filtered[0];
-
-        select.value =
-            currentSymbol;
-    }
-
-    document.getElementById(
-        "selectedSymbol"
-    ).textContent =
-        currentSymbol;
-
+if(a.includes(cur))
+$("symbol").value=cur;
+else if(a.includes("BTCUSDT"))
+$("symbol").value="BTCUSDT";
+else if(a[0])
+$("symbol").value=a[0]
 }
 
+$("search").oninput=renderSymbols;
 
-/* =========================================================
-   SYMBOL CHANGE
-========================================================= */
+function ema(a,n){
+if(a.length<n)return a.at(-1)||0;
 
-document
-.getElementById("symbol")
-.addEventListener(
-    "change",
-    () => {
+let k=2/(n+1);
+let e=a.slice(0,n).reduce((x,y)=>x+y,0)/n;
 
-        currentSymbol =
-            document.getElementById(
-                "symbol"
-            ).value;
+for(let i=n;i<a.length;i++)
+e=a[i]*k+e*(1-k);
 
-        document.getElementById(
-            "selectedSymbol"
-        ).textContent =
-            currentSymbol;
+return e
+}
 
-        lastSignalKey = null;
+function rsi(a,n=14){
+if(a.length<=n)return 50;
 
-        log(
-            "Selected symbol: " +
-            currentSymbol
-        );
+let g=0,l=0;
 
-        scan();
+for(let i=a.length-n;i<a.length;i++){
+let d=a[i]-a[i-1];
 
-    }
+if(d>=0)g+=d;
+else l-=d
+}
+
+return 100-100/(1+(l?g/l:99))
+}
+
+function atr(c,n=14){
+let t=[];
+
+for(let i=1;i<c.length;i++)
+t.push(
+Math.max(
+c[i].h-c[i].l,
+Math.abs(c[i].h-c[i-1].c),
+Math.abs(c[i].l-c[i-1].c)
+)
 );
 
+return t.slice(-n).reduce((a,b)=>a+b,0)/n
+}
 
-/* =========================================================
-   SEARCH
-========================================================= */
+async function fetchData(){
+try{
 
-document
-.getElementById("symbolSearch")
-.addEventListener(
-    "input",
-    renderSymbols
+let s=$("symbol").value;
+let tf=$("tf").value;
+
+let d=await(
+await fetch(
+`https://fapi.binance.com/fapi/v1/klines?symbol=${s}&interval=${tf}&limit=100`
+)
+).json();
+
+candles=d.slice(0,-1).map(x=>({
+t:x[0],
+o:+x[1],
+h:+x[2],
+l:+x[3],
+c:+x[4],
+v:+x[5]
+}));
+
+analyze();
+draw();
+
+}catch(e){
+log("Market data error: "+e.message)
+}
+}
+
+function analyze(){
+
+if(candles.length<60)return;
+
+let n=candles.length;
+let c=candles;
+let cl=c.map(x=>x.c);
+
+let x=c[n-1];
+let p=c[n-2];
+let p3=c[n-3];
+
+let e50=ema(cl,50);
+let e200=ema(cl,200);
+
+let rv=rsi(cl);
+let av=atr(c);
+
+let bull=e50>e200;
+let bear=e50<e200;
+
+let bL=x.l<p.l&&x.c>p.l;
+let sL=x.h>p.h&&x.c<p.h;
+
+let bB=x.c>p.h;
+let sB=x.c<p.l;
+
+let bF=p3.h<x.l;
+let sF=p3.l>x.h;
+
+let buy=bL&&bB&&bF&&bull&&rv>50;
+let sell=sL&&sB&&sF&&bear&&rv<50;
+
+$("chartSymbol").textContent=
+`${$("symbol").value} · ${$("tf").value.replace("m","")} · Binance`;
+
+$("price").textContent=
+`${x.c.toLocaleString(undefined,{maximumFractionDigits:2})}`;
+
+$("price2").textContent=
+x.c.toLocaleString(undefined,{maximumFractionDigits:8});
+
+$("rsi").textContent=rv.toFixed(2);
+$("atr").textContent=av.toFixed(4);
+
+$("trend").textContent=
+bull?"BULLISH":
+bear?"BEARISH":
+"NEUTRAL";
+
+$("vol").textContent=
+x.v.toLocaleString(undefined,{maximumFractionDigits:0});
+
+setC("liq",bL||sL);
+setC("bos",bB||sB);
+setC("fvg",bF||sF);
+setC("ema",bull||bear);
+setC("rsiC",(bull&&rv>50)||(bear&&rv<50));
+
+let sig=buy?"BUY":sell?"SELL":null;
+
+if(!sig){
+
+$("signalCard").className="signal";
+$("signalTitle").textContent="🟡 NO SIGNAL";
+
+["entry","sl","tp1","tp2"]
+.forEach(i=>$(i).textContent="—");
+
+$("rr").textContent="1:—";
+$("confidence").textContent="—";
+
+return
+}
+
+let risk=
+Math.max(
+av*1.5,
+x.c*.003
 );
 
+let entry=x.c;
 
-/* =========================================================
-   TIMEFRAME
-========================================================= */
+let sl=buy?
+entry-risk:
+entry+risk;
 
-document
-.getElementById("timeframe")
-.addEventListener(
-    "change",
-    () => {
+let tp1=buy?
+entry+risk*1.5:
+entry-risk*1.5;
 
-        lastSignalKey = null;
+let tp2=buy?
+entry+risk*2.5:
+entry-risk*2.5;
 
-        log(
-            "Timeframe changed to " +
-            document.getElementById(
-                "timeframe"
-            ).value
-        );
-
-        scan();
-    }
+let conf=Math.min(
+99,
+70+
+(bF||sF?7:0)+
+(bL||sL?6:0)+
+(bB||sB?5:0)+
+5
 );
 
+$("signalCard").className=
+"signal "+(buy?"buy":"sell");
 
-/* =========================================================
-   EMA
-========================================================= */
+$("signalTitle").textContent=
+buy?
+"🟢 BUY — SMC SIGNAL":
+"🔴 SELL — SMC SIGNAL";
 
-function ema(values, period){
+$("entry").textContent=entry.toFixed(2);
+$("sl").textContent=sl.toFixed(2);
+$("tp1").textContent=tp1.toFixed(2);
+$("tp2").textContent=tp2.toFixed(2);
 
-    const k =
-        2 /
-        (period + 1);
+$("rr").textContent="1:1.5 / 1:2.5";
+$("confidence").textContent=conf+"%";
 
-    let result =
-        values[0];
+let key=
+`${$("symbol").value}|${$("tf").value}|${x.t}|${sig}`;
 
-    for(
-        let i = 1;
-        i < values.length;
-        i++
-    ){
+if(key!==lastKey){
 
-        result =
-            values[i] * k +
-            result * (1-k);
-    }
+lastKey=key;
 
-    return result;
-}
-
-
-/* =========================================================
-   RSI
-========================================================= */
-
-function calculateRSI(
-    closes,
-    period = 14
-){
-
-    if(
-        closes.length <
-        period + 1
-    ){
-        return 50;
-    }
-
-    let gains = 0;
-
-    let losses = 0;
-
-    for(
-        let i = 1;
-        i <= period;
-        i++
-    ){
-
-        const diff =
-            closes[i] -
-            closes[i-1];
-
-        if(diff >= 0)
-            gains += diff;
-
-        else
-            losses -= diff;
-    }
-
-    let avgGain =
-        gains / period;
-
-    let avgLoss =
-        losses / period;
-
-    for(
-        let i = period + 1;
-        i < closes.length;
-        i++
-    ){
-
-        const diff =
-            closes[i] -
-            closes[i-1];
-
-        const gain =
-            Math.max(
-                diff,
-                0
-            );
-
-        const loss =
-            Math.max(
-                -diff,
-                0
-            );
-
-        avgGain =
-            (
-                avgGain *
-                (period - 1) +
-                gain
-            ) / period;
-
-        avgLoss =
-            (
-                avgLoss *
-                (period - 1) +
-                loss
-            ) / period;
-    }
-
-    if(avgLoss === 0)
-        return 100;
-
-    const rs =
-        avgGain /
-        avgLoss;
-
-    return (
-        100 -
-        100 /
-        (1 + rs)
-    );
-}
-
-
-/* =========================================================
-   FETCH KLINES
-========================================================= */
-
-async function getKlines(){
-
-    const timeframe =
-        document.getElementById(
-            "timeframe"
-        ).value;
-
-    const url =
-        BINANCE_PUBLIC +
-        "/fapi/v1/klines" +
-        `?symbol=${currentSymbol}` +
-        `&interval=${timeframe}` +
-        `&limit=250`;
-
-    const response =
-        await fetch(url);
-
-    return await response.json();
-
-}
-
-
-/* =========================================================
-   SMC SCANNER
-========================================================= */
-
-async function scan(){
-
-    try{
-
-        const data =
-            await getKlines();
-
-        if(
-            !Array.isArray(data) ||
-            data.length < 205
-        ){
-
-            log(
-                "Not enough candles for analysis."
-            );
-
-            return;
-        }
-
-
-        /*
-         Use CLOSED candles only.
-        The last Binance candle is still forming,
-        therefore remove it.
-        */
-
-        const candles =
-            data.slice(
-                0,
-                -1
-            );
-
-
-        const closes =
-            candles.map(
-                c => Number(c[4])
-            );
-
-        const highs =
-            candles.map(
-                c => Number(c[2])
-            );
-
-        const lows =
-            candles.map(
-                c => Number(c[3])
-            );
-
-
-        const last =
-            candles[
-                candles.length - 1
-            ];
-
-        const prev =
-            candles[
-                candles.length - 2
-            ];
-
-        const prev3 =
-            candles[
-                candles.length - 4
-            ];
-
-
-        const lastClose =
-            Number(last[4]);
-
-        const prevHigh =
-            Number(prev[2]);
-
-        const prevLow =
-            Number(prev[3]);
-
-        const lastHigh =
-            Number(last[2]);
-
-        const lastLow =
-            Number(last[3]);
-
-
-        /* EMA */
-
-        const ema50 =
-            ema(
-                closes.slice(-150),
-                50
-            );
-
-        const ema200 =
-            ema(
-                closes,
-                200
-            );
-
-
-        /* RSI */
-
-        const rsi =
-            calculateRSI(
-                closes
-            );
-
-
-        document.getElementById(
-            "rsi"
-        ).textContent =
-            rsi.toFixed(2);
-
-
-        /* TREND */
-
-        const bullishTrend =
-            ema50 > ema200;
-
-        const bearishTrend =
-            ema50 < ema200;
-
-
-        document.getElementById(
-            "trend"
-        ).textContent =
-            bullishTrend
-            ? "BULLISH"
-            : bearishTrend
-            ? "BEARISH"
-            : "NEUTRAL";
-
-
-        /* LIQUIDITY GRAB */
-
-        const bullishLiquidity =
-            lastLow < prevLow &&
-            lastClose > prevLow;
-
-        const bearishLiquidity =
-            lastHigh > prevHigh &&
-            lastClose < prevHigh;
-
-
-        /* BOS / CHoCH */
-
-        const bullishBOS =
-            lastClose > prevHigh;
-
-        const bearishBOS =
-            lastClose < prevLow;
-
-
-        /* FVG */
-
-        const bullishFVG =
-            Number(prev3[2]) <
-            lastLow;
-
-        const bearishFVG =
-            Number(prev3[3]) >
-            lastHigh;
-
-
-        /* RSI */
-
-        const bullishRSI =
-            rsi > 50;
-
-        const bearishRSI =
-            rsi < 50;
-
-
-        /* DISPLAY CONFIRMATIONS */
-
-        setStatus(
-            "liq",
-            bullishLiquidity ||
-            bearishLiquidity
-        );
-
-        setStatus(
-            "bos",
-            bullishBOS ||
-            bearishBOS
-        );
-
-        setStatus(
-            "fvg",
-            bullishFVG ||
-            bearishFVG
-        );
-
-        setStatus(
-            "ema",
-            bullishTrend ||
-            bearishTrend
-        );
-
-        setStatus(
-            "rsiConfirm",
-            bullishRSI ||
-            bearishRSI
-        );
-
-
-        /* FULL BUY */
-
-        const buy =
-            bullishLiquidity &&
-            bullishBOS &&
-            bullishFVG &&
-            bullishTrend &&
-            bullishRSI;
-
-
-        /* FULL SELL */
-
-        const sell =
-            bearishLiquidity &&
-            bearishBOS &&
-            bearishFVG &&
-            bearishTrend &&
-            bearishRSI;
-
-
-        if(!buy && !sell){
-
-            document.getElementById(
-                "signal"
-            ).textContent =
-                "NO SIGNAL";
-
-            document.getElementById(
-                "signal"
-            ).className =
-                "value wait";
-
-            clearLevels();
-
-            return;
-        }
-
-
-        /* ENTRY */
-
-        const entry =
-            lastClose;
-
-
-        /*
-         Risk = 0.3%
-         */
-
-        const risk =
-            entry * 0.003;
-
-
-        let sl;
-
-        let tp1;
-
-        let tp2;
-
-        let side;
-
-
-        if(buy){
-
-            side = "BUY";
-
-            sl =
-                entry - risk;
-
-            tp1 =
-                entry +
-                risk * 1.5;
-
-            tp2 =
-                entry +
-                risk * 2.5;
-
-        }else{
-
-            side = "SELL";
-
-            sl =
-                entry + risk;
-
-            tp1 =
-                entry -
-                risk * 1.5;
-
-            tp2 =
-                entry -
-                risk * 2.5;
-        }
-
-
-        document.getElementById(
-            "signal"
-        ).textContent =
-            side;
-
-        document.getElementById(
-            "signal"
-        ).className =
-            side === "BUY"
-            ? "value buy"
-            : "value sell";
-
-
-        document.getElementById(
-            "entry"
-        ).textContent =
-            formatPrice(entry);
-
-        document.getElementById(
-            "sl"
-        ).textContent =
-            formatPrice(sl);
-
-        document.getElementById(
-            "tp1"
-        ).textContent =
-            formatPrice(tp1);
-
-        document.getElementById(
-            "tp2"
-        ).textContent =
-            formatPrice(tp2);
-
-
-        const candleTime =
-            Number(last[0]);
-
-
-        const signalKey =
-            `${currentSymbol}:` +
-            `${side}:` +
-            `${candleTime}`;
-
-
-        if(
-            signalKey !==
-            lastSignalKey
-        ){
-
-            lastSignalKey =
-                signalKey;
-
-            log(
-                `${currentSymbol} ${side} ` +
-                `Entry ${formatPrice(entry)} ` +
-                `SL ${formatPrice(sl)} ` +
-                `TP2 ${formatPrice(tp2)}`
-            );
-
-
-            speak(
-                `${currentSymbol} ` +
-                `${side} signal`
-            );
-
-
-            /*
-             AUTO TRADE
-             */
-
-            if(autoTrade){
-
-                await executeTrade(
-                    side,
-                    entry,
-                    sl,
-                    tp1,
-                    tp2,
-                    candleTime
-                );
-            }
-
-        }
-
-    }catch(error){
-
-        log(
-            "Scanner error: " +
-            error.message
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   STATUS DISPLAY
-========================================================= */
-
-function setStatus(
-    id,
-    confirmed
-){
-
-    const element =
-        document.getElementById(id);
-
-    element.textContent =
-        confirmed
-        ? "CONFIRMED"
-        : "WAITING";
-
-    element.style.color =
-        confirmed
-        ? "#69e991"
-        : "#ffd76b";
-}
-
-
-/* =========================================================
-   FORMAT PRICE
-========================================================= */
-
-function formatPrice(price){
-
-    if(price >= 1000)
-        return price.toFixed(2);
-
-    if(price >= 1)
-        return price.toFixed(4);
-
-    return price.toFixed(8);
-
-}
-
-
-/* =========================================================
-   CLEAR LEVELS
-========================================================= */
-
-function clearLevels(){
-
-    document.getElementById(
-        "entry"
-    ).textContent = "—";
-
-    document.getElementById(
-        "sl"
-    ).textContent = "—";
-
-    document.getElementById(
-        "tp1"
-    ).textContent = "—";
-
-    document.getElementById(
-        "tp2"
-    ).textContent = "—";
-}
-
-
-/* =========================================================
-   EXECUTE DEMO TRADE
-========================================================= */
-
-async function executeTrade(
-    side,
-    entry,
-    sl,
-    tp1,
-    tp2,
-    candleTime
-){
-
-    try{
-
-        const size =
-            Number(
-                document.getElementById(
-                    "tradeSize"
-                ).value
-            );
-
-        log(
-            `AUTO TRADE request: ` +
-            `${currentSymbol} ${side}`
-        );
-
-
-        const response =
-            await fetch(
-                BACKEND +
-                "/api/execute-signal",
-                {
-                    method:"POST",
-
-                    headers:{
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:JSON.stringify({
-
-                        symbol:
-                            currentSymbol,
-
-                        side:
-                            side,
-
-                        entry:
-                            entry,
-
-                        sl:
-                            sl,
-
-                        tp1:
-                            tp1,
-
-                        tp2:
-                            tp2,
-
-                        quantity_usdt:
-                            size,
-
-                        candle_time:
-                            candleTime
-
-                    })
-                }
-            );
-
-
-        const result =
-            await response.json();
-
-
-        if(!response.ok){
-
-            log(
-                "AUTO TRADE rejected: " +
-                JSON.stringify(result)
-            );
-
-            return;
-        }
-
-
-        log(
-            "DEMO TRADE OPENED: " +
-            JSON.stringify(result)
-        );
-
-
-        speak(
-            `${currentSymbol} ` +
-            `${side} trade opened`
-        );
-
-
-    }catch(error){
-
-        log(
-            "Trade error: " +
-            error.message
-        );
-    }
-
-}
-
-
-/* =========================================================
-   BACKEND TEST
-========================================================= */
-
-async function testBackend(){
-
-    try{
-
-        const response =
-            await fetch(
-                BACKEND +
-                "/api/status"
-            );
-
-        const data =
-            await response.json();
-
-
-        if(
-            data.status ===
-            "online"
-        ){
-
-            document.getElementById(
-                "backend"
-            ).textContent =
-                "ONLINE";
-
-            document.getElementById(
-                "mode"
-            ).textContent =
-                data.mode;
-
-            log(
-                `Backend connected — Mode: ${data.mode}`
-            );
-
-        }else{
-
-            document.getElementById(
-                "backend"
-            ).textContent =
-                "OFFLINE";
-        }
-
-
-    }catch(error){
-
-        document.getElementById(
-            "backend"
-        ).textContent =
-            "OFFLINE";
-
-        log(
-            "Backend error: " +
-            error.message
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   AUTO BUTTON
-========================================================= */
-
-document
-.getElementById("autoBtn")
-.addEventListener(
-    "click",
-    async () => {
-
-        const newState =
-            !autoTrade;
-
-
-        /*
-         Safety:
-         backend must approve AUTO state.
-        */
-
-        try{
-
-            const response =
-                await fetch(
-                    BACKEND +
-                    "/api/auto",
-                    {
-                        method:"POST",
-
-                        headers:{
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body:JSON.stringify({
-                            enabled:
-                                newState
-                        })
-                    }
-                );
-
-
-            const data =
-                await response.json();
-
-
-            if(!response.ok){
-
-                log(
-                    "AUTO TRADE error: " +
-                    JSON.stringify(data)
-                );
-
-                return;
-            }
-
-
-            autoTrade =
-                newState;
-
-
-            document.getElementById(
-                "autoBtn"
-            ).textContent =
-                autoTrade
-                ? "AUTO TRADE: ON"
-                : "AUTO TRADE: OFF";
-
-
-            log(
-                autoTrade
-                ? "AUTO TRADE ENABLED — DEMO"
-                : "AUTO TRADE DISABLED"
-            );
-
-        }catch(error){
-
-            log(
-                "AUTO error: " +
-                error.message
-            );
-
-        }
-
-    }
+log(
+`SMC Signal: ${sig} (${conf}%) — ${$("symbol").value}`
 );
 
-
-/* =========================================================
-   EMERGENCY STOP
-========================================================= */
-
-document
-.getElementById("emergency")
-.addEventListener(
-    "click",
-    async () => {
-
-        try{
-
-            const response =
-                await fetch(
-                    BACKEND +
-                    "/api/emergency-stop",
-                    {
-                        method:"POST"
-                    }
-                );
-
-
-            const data =
-                await response.json();
-
-
-            autoTrade =
-                false;
-
-
-            document.getElementById(
-                "autoBtn"
-            ).textContent =
-                "AUTO TRADE: OFF";
-
-
-            log(
-                "EMERGENCY STOP ACTIVATED"
-            );
-
-
-        }catch(error){
-
-            log(
-                "Emergency error: " +
-                error.message
-            );
-
-        }
-
-    }
+if(
+voice&&
+speechSynthesis
+)
+speechSynthesis.speak(
+new SpeechSynthesisUtterance(
+`${$("symbol").value} ${sig} signal`
+)
 );
 
+if(auto)
 
-/* =========================================================
-   VOICE
-========================================================= */
+execute({
+symbol:$("symbol").value,
+side:sig,
+entry,
+sl,
+tp1,
+tp2,
+confidence:conf,
+reason:"Liquidity Grab + BOS/CHoCH + FVG + Trend",
+quantityUsdt:
+Math.min(
+20,
++$("size").value||20
+)
+});
 
-document
-.getElementById("voiceBtn")
-.addEventListener(
-    "click",
-    () => {
-
-        voice =
-            !voice;
-
-        document.getElementById(
-            "voiceBtn"
-        ).textContent =
-            voice
-            ? "VOICE: ON"
-            : "VOICE: OFF";
-
-    }
-);
-
-
-/* =========================================================
-   REFRESH SYMBOLS
-========================================================= */
-
-document
-.getElementById("refreshSymbols")
-.addEventListener(
-    "click",
-    loadSymbols
-);
-
-
-/* =========================================================
-   TEST BACKEND
-========================================================= */
-
-document
-.getElementById("testBackend")
-.addEventListener(
-    "click",
-    testBackend
-);
-
-
-/* =========================================================
-   START
-========================================================= */
-
-async function start(){
-
-    await loadSymbols();
-
-    await testBackend();
-
-    await scan();
-
-    /*
-     Scan every 15 seconds.
-    */
-
-    setInterval(
-        scan,
-        15000
-    );
-
-    /*
-     Refresh Binance symbols every 5 minutes.
-    */
-
-    setInterval(
-        loadSymbols,
-        300000
-    );
 }
 
+}
 
-start();
+async function execute(s){
 
+try{
+
+let d=await(
+await fetch(
+API+"/api/execute-signal",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify(s)
+}
+)
+).json();
+
+log("EXECUTE: "+JSON.stringify(d));
+
+}catch(e){
+
+log("Execute error: "+e.message)
+
+}
+
+}
+
+async function status(){
+
+try{
+
+let d=await(
+await fetch(API+"/api/status")
+).json();
+
+$("backend").textContent=
+d.ok?"ONLINE":"OFFLINE";
+
+$("modePill").textContent=
+d.mode||"DEMO";
+
+auto=!!d.auto;
+
+$("auto").textContent=
+auto?"ON":"OFF";
+
+$("auto").style.background=
+auto?
+"#087d45":
+"#230b0f";
+
+}catch(e){
+
+$("backend").textContent="OFFLINE"
+
+}
+
+}
+
+$("auto").onclick=async()=>{
+
+auto=!auto;
+
+await fetch(
+API+"/api/auto",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+enabled:auto
+})
+}
+);
+
+await status();
+
+log(
+"AUTO TRADE: "+
+(auto?"ON":"OFF")
+);
+
+};
+
+$("stop").onclick=async()=>{
+
+let d=await(
+await fetch(
+API+"/api/emergency-stop",
+{
+method:"POST"
+}
+)
+).json();
+
+log(
+"EMERGENCY STOP: "+
+JSON.stringify(d)
+);
+
+await status();
+
+};
+
+$("voice").onclick=()=>{
+
+voice=!voice;
+
+$("voice").textContent=
+voice?
+"🔊 Voice ON":
+"🔇 Voice OFF"
+
+};
+
+$("test").onclick=async()=>{
+
+await status();
+
+log(
+"Backend connected — Mode: "+
+$("modePill").textContent
+)
+
+};
+
+$("symbol").onchange=()=>{
+
+lastKey="";
+
+fetchData()
+
+};
+
+$("tf").onchange=()=>{
+
+lastKey="";
+
+fetchData()
+
+};
+
+function draw(){
+
+let cv=$("canvas");
+let ctx=cv.getContext("2d");
+let r=cv.getBoundingClientRect();
+let d=devicePixelRatio||1;
+
+cv.width=r.width*d;
+cv.height=r.height*d;
+
+ctx.scale(d,d);
+
+let w=r.width;
+let h=r.height;
+
+let cs=candles.slice(-55);
+
+if(!cs.length)return;
+
+let hi=Math.max(...cs.map(x=>x.h));
+let lo=Math.min(...cs.map(x=>x.l));
+
+let pad=20;
+
+let step=
+(w-pad*2)/cs.length;
+
+let y=v=>
+h-pad-
+(v-lo)/(hi-lo||1)*
+(h-pad*2);
+
+ctx.strokeStyle="#0b2633";
+
+for(let i=0;i<6;i++){
+
+let gy=
+pad+
+i*(h-pad*2)/5;
+
+ctx.beginPath();
+ctx.moveTo(0,gy);
+ctx.lineTo(w,gy);
+ctx.stroke()
+
+}
+
+cs.forEach((x,i)=>{
+
+let X=
+pad+
+i*step+
+step/2;
+
+let o=y(x.o);
+let c=y(x.c);
+let hh=y(x.h);
+let ll=y(x.l);
+
+let up=x.c>=x.o;
+
+ctx.strokeStyle=
+up?
+"#35ec7e":
+"#ff5061";
+
+ctx.fillStyle=ctx.strokeStyle;
+
+ctx.beginPath();
+ctx.moveTo(X,hh);
+ctx.lineTo(X,ll);
+ctx.stroke();
+
+let bw=
+Math.max(
+3,
+step*.58
+);
+
+ctx.fillRect(
+X-bw/2,
+Math.min(o,c),
+bw,
+Math.max(
+1,
+Math.abs(o-c)
+)
+);
+
+});
+
+let e50=
+ema(
+candles.map(x=>x.c),
+50
+);
+
+let e200=
+ema(
+candles.map(x=>x.c),
+200
+);
+
+ctx.strokeStyle="#18a8ff";
+
+ctx.beginPath();
+
+cs.forEach((x,i)=>{
+
+let X=
+pad+
+i*step+
+step/2;
+
+let Y=y(e50);
+
+i?
+ctx.lineTo(X,Y):
+ctx.moveTo(X,Y)
+
+});
+
+ctx.stroke();
+
+ctx.strokeStyle="#ff4052";
+
+ctx.beginPath();
+
+cs.forEach((x,i)=>{
+
+let X=
+pad+
+i*step+
+step/2;
+
+let Y=y(e200);
+
+i?
+ctx.lineTo(X,Y):
+ctx.moveTo(X,Y)
+
+});
+
+ctx.stroke()
+
+}
+
+window.addEventListener(
+"resize",
+draw
+);
+
+async function init(){
+
+await loadSymbols();
+await status();
+await fetchData();
+
+setInterval(
+fetchData,
+15000
+);
+
+setInterval(
+status,
+10000
+);
+
+setInterval(
+loadSymbols,
+300000
+)
+
+}
+
+init();
 </script>
 
 </body>
