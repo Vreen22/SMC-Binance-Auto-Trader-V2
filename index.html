@@ -1,934 +1,1575 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#07100b">
+<meta name="theme-color" content="#050806">
 <title>SMC Binance Auto Trader V2</title>
 
 <style>
+*{box-sizing:border-box}
+
 body{
- margin:0;
- background:#07100b;
- color:#eaf5ec;
- font-family:Arial,sans-serif
+    margin:0;
+    background:#050806;
+    color:#eef7ef;
+    font-family:Arial,sans-serif;
 }
-.wrap{
- max-width:1100px;
- margin:auto;
- padding:18px
+
+.container{
+    max-width:900px;
+    margin:auto;
+    padding:22px;
 }
-h1{font-size:22px}
-.bar,.grid{
- display:flex;
- gap:10px;
- flex-wrap:wrap
+
+h1{
+    font-size:30px;
+    margin-bottom:22px;
 }
+
+.controls{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+
+select,input,button{
+    width:100%;
+    padding:15px;
+    border-radius:14px;
+    border:1px solid #295333;
+    background:#0b160e;
+    color:#fff;
+    font-size:16px;
+}
+
+button{
+    cursor:pointer;
+}
+
+button:hover{
+    background:#122519;
+}
+
 .card{
- background:#0d1811;
- border:1px solid #23412b;
- border-radius:12px;
- padding:14px;
- margin-top:12px;
- flex:1;
- min-width:180px
+    margin-top:18px;
+    padding:22px;
+    border:1px solid #214a2a;
+    border-radius:20px;
+    background:#09110c;
 }
-input,select,button{
- background:#101d14;
- color:#fff;
- border:1px solid #31543a;
- border-radius:8px;
- padding:10px
+
+.label{
+    font-size:18px;
+    font-weight:bold;
 }
-button{cursor:pointer}
-.good{color:#43e58b}
-.bad{color:#ff6877}
-.warn{color:#ffd166}
+
+.value{
+    margin-top:8px;
+    font-size:26px;
+}
+
+.online{color:#69e991}
+.wait{color:#ffd76b}
+.buy{color:#45e879}
+.sell{color:#ff6767}
+
+.confirm{
+    line-height:1.9;
+    font-size:16px;
+}
+
 .log{
- height:170px;
- overflow:auto;
- background:#040804;
- padding:10px;
- font:12px monospace
+    background:#000;
+    padding:15px;
+    min-height:130px;
+    font-family:monospace;
+    white-space:pre-wrap;
+    overflow:auto;
 }
+
+.row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+
 .small{
- font-size:12px;
- color:#9db1a1;
- line-height:1.6
+    font-size:13px;
+    color:#9db0a1;
 }
-.pill{
- padding:7px 10px;
- border-radius:20px;
- background:#17271b
+
+.statusBox{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+}
+
+.search{
+    margin-top:12px;
+}
+
+@media(max-width:650px){
+    .controls,
+    .row,
+    .statusBox{
+        grid-template-columns:1fr;
+    }
+
+    h1{
+        font-size:25px;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<div class="wrap">
+<div class="container">
 
 <h1>SMC Binance Auto Trader V2</h1>
 
-<div class="bar">
+<div class="controls">
 
-<select id="symbol">
-<option>BTCUSDT</option>
-</select>
+    <div>
+        <div class="small">BINANCE FUTURES SYMBOL</div>
+        <select id="symbol"></select>
+        <input
+            class="search"
+            id="symbolSearch"
+            placeholder="Search symbol e.g. ETH"
+        >
+    </div>
 
-<select id="tf">
-<option value="5m">5 Min</option>
-<option value="15m">15 Min</option>
-<option value="1m">1 Min</option>
-<option value="1h">1 Hour</option>
-</select>
-
-<input
- id="size"
- type="number"
- value="20"
- min="5"
- step="1"
- placeholder="USDT">
-
-<button id="connect">Test Backend</button>
-
-<button id="stop">EMERGENCY STOP</button>
-
-<label class="pill">
-<input id="auto" type="checkbox">
-AUTO TRADE
-</label>
-
-<label class="pill">
-<input id="voice" type="checkbox" checked>
-VOICE
-</label>
+    <div>
+        <div class="small">TIMEFRAME</div>
+        <select id="timeframe">
+            <option value="1m">1 Min</option>
+            <option value="5m" selected>5 Min</option>
+            <option value="15m">15 Min</option>
+            <option value="30m">30 Min</option>
+            <option value="1h">1 Hour</option>
+            <option value="2h">2 Hours</option>
+            <option value="4h">4 Hours</option>
+        </select>
+    </div>
 
 </div>
 
-<div class="grid">
+<div class="row" style="margin-top:12px">
+
+    <input
+        id="tradeSize"
+        type="number"
+        value="20"
+        min="1"
+        max="20"
+        step="1"
+        placeholder="USDT Trade Size"
+    >
+
+    <button id="testBackend">
+        Test Backend
+    </button>
+
+</div>
+
+<div class="row" style="margin-top:12px">
+
+    <button id="emergency">
+        EMERGENCY STOP
+    </button>
+
+    <button id="autoBtn">
+        AUTO TRADE: OFF
+    </button>
+
+</div>
+
+<div class="row" style="margin-top:12px">
+
+    <button id="voiceBtn">
+        VOICE: ON
+    </button>
+
+    <button id="refreshSymbols">
+        REFRESH BINANCE SYMBOLS
+    </button>
+
+</div>
+
 
 <div class="card">
-<b>Backend</b>
-<div id="backend">CHECKING...</div>
+    <div class="label">Backend</div>
+    <div class="value online" id="backend">
+        CHECKING...
+    </div>
+</div>
+
+
+<div class="statusBox">
+
+    <div class="card">
+        <div class="label">Mode</div>
+        <div class="value" id="mode">—</div>
+    </div>
+
+    <div class="card">
+        <div class="label">Selected Symbol</div>
+        <div class="value" id="selectedSymbol">—</div>
+    </div>
+
+</div>
+
+
+<div class="card">
+    <div class="label">Trend</div>
+    <div class="value" id="trend">—</div>
+</div>
+
+
+<div class="card">
+    <div class="label">RSI</div>
+    <div class="value" id="rsi">—</div>
+</div>
+
+
+<div class="card">
+    <div class="label">SMC</div>
+    <div class="value wait" id="signal">
+        NO SIGNAL
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="label">Entry</div>
+    <div class="value" id="entry">—</div>
 </div>
 
 <div class="card">
-<b>Mode</b>
-<div id="mode">—</div>
+    <div class="label">SL</div>
+    <div class="value" id="sl">—</div>
 </div>
 
 <div class="card">
-<b>Trend</b>
-<div id="trend">—</div>
+    <div class="label">TP1</div>
+    <div class="value" id="tp1">—</div>
 </div>
 
 <div class="card">
-<b>RSI</b>
-<div id="rsi">—</div>
+    <div class="label">TP2</div>
+    <div class="value" id="tp2">—</div>
 </div>
 
-<div class="card">
-<b>SMC</b>
-<div id="smc">WAITING</div>
-</div>
-
-<div class="card">
-<b>Entry</b>
-<div id="entry">—</div>
-</div>
-
-<div class="card">
-<b>SL</b>
-<div id="sl">—</div>
-</div>
-
-<div class="card">
-<b>TP1</b>
-<div id="tp1">—</div>
-</div>
-
-<div class="card">
-<b>TP2</b>
-<div id="tp2">—</div>
-</div>
-
-</div>
 
 <div class="card">
 
-<b>SMC Confirmation</b>
+    <div class="label">
+        SMC Confirmation
+    </div>
 
-<div id="confirm" class="small">
-Waiting for closed candle...
+    <div class="confirm">
+
+        Liquidity Grab:
+        <span id="liq">WAITING</span><br>
+
+        BOS / CHoCH:
+        <span id="bos">WAITING</span><br>
+
+        FVG:
+        <span id="fvg">WAITING</span><br>
+
+        EMA 50 / 200:
+        <span id="ema">WAITING</span><br>
+
+        RSI:
+        <span id="rsiConfirm">WAITING</span>
+
+    </div>
+
 </div>
 
-</div>
 
 <div class="card">
 
-<b>System Log</b>
+    <div class="label">
+        System Log
+    </div>
 
-<div id="log" class="log"></div>
+    <div class="log" id="log"></div>
+
+</div>
+
+
+<div class="card small">
+
+    TESTNET / DEMO FIRST — Binance API credentials belong only
+    in backend environment variables. Never put API keys or
+    secrets in GitHub or this page.
 
 </div>
 
-<p class="small">
-TESTNET FIRST — Binance API credentials belong only in the backend environment variables.
-Never put Binance API keys or secrets in GitHub or this page.
-</p>
-
 </div>
+
 
 <script>
 
+const BACKEND =
+    window.location.origin;
+
+const BINANCE_PUBLIC =
+    "https://fapi.binance.com";
+
+
+let symbols = [];
+
+let autoTrade = false;
+
+let voice = true;
+
+let lastSignalKey = null;
+
+let currentSymbol = "BTCUSDT";
+
+
 /* =========================================================
-   BACKEND
-   ========================================================= */
-
-const API =
- localStorage.getItem("SMC_BACKEND")
- || window.location.origin;
-
-const $ = id => document.getElementById(id);
+   LOG
+========================================================= */
 
 function log(message){
 
- $("log").innerHTML +=
- `[${new Date().toLocaleTimeString()}] ${message}<br>`;
+    const box =
+        document.getElementById("log");
 
- $("log").scrollTop =
- $("log").scrollHeight;
+    const time =
+        new Date().toLocaleTimeString();
 
+    box.textContent +=
+        `[${time}] ${message}\n`;
+
+    box.scrollTop =
+        box.scrollHeight;
 }
 
 
 /* =========================================================
    VOICE
-   ========================================================= */
+========================================================= */
 
-function voice(message){
+function speak(text){
 
- if(
-   $("voice").checked &&
-   "speechSynthesis" in window
- ){
+    if(!voice) return;
 
-   speechSynthesis.cancel();
+    if(
+        "speechSynthesis"
+        in window
+    ){
 
-   const u =
-   new SpeechSynthesisUtterance(message);
+        speechSynthesis.cancel();
 
-   u.lang="en-US";
+        const u =
+            new SpeechSynthesisUtterance(
+                text
+            );
 
-   speechSynthesis.speak(u);
+        u.rate = 1;
 
- }
+        speechSynthesis.speak(u);
+    }
+}
+
+
+/* =========================================================
+   LOAD BINANCE FUTURES SYMBOLS
+========================================================= */
+
+async function loadSymbols(){
+
+    try{
+
+        log(
+            "Loading Binance Futures symbols..."
+        );
+
+        const response =
+            await fetch(
+                BINANCE_PUBLIC +
+                "/fapi/v1/exchangeInfo"
+            );
+
+        const data =
+            await response.json();
+
+        symbols =
+            data.symbols
+            .filter(s =>
+                s.status === "TRADING" &&
+                s.quoteAsset === "USDT" &&
+                s.contractType === "PERPETUAL"
+            )
+            .map(s => s.symbol)
+            .sort();
+
+        renderSymbols();
+
+        log(
+            `Loaded ${symbols.length} active USDT perpetual symbols.`
+        );
+
+    }catch(error){
+
+        log(
+            "Symbol loading error: " +
+            error.message
+        );
+
+    }
 
 }
 
 
 /* =========================================================
-   API REQUEST
-   ========================================================= */
+   RENDER SYMBOL DROPDOWN
+========================================================= */
 
-async function api(path,options={}){
+function renderSymbols(){
 
- const response =
- await fetch(
-   API + path,
-   {
-     ...options,
-     headers:{
-       "Content-Type":"application/json",
-       ...(options.headers || {})
-     }
-   }
- );
+    const select =
+        document.getElementById(
+            "symbol"
+        );
 
- let data;
+    const search =
+        document.getElementById(
+            "symbolSearch"
+        ).value
+        .trim()
+        .toUpperCase();
 
- try{
-   data = await response.json();
- }catch{
-   data = {};
- }
+    const filtered =
+        symbols.filter(
+            s =>
+            !search ||
+            s.includes(search)
+        );
 
- if(!response.ok){
+    select.innerHTML = "";
 
-   throw new Error(
-     data.detail ||
-     data.error ||
-     `HTTP ${response.status}`
-   );
+    filtered.forEach(symbol => {
 
- }
+        const option =
+            document.createElement(
+                "option"
+            );
 
- return data;
+        option.value = symbol;
 
-}
+        option.textContent = symbol;
 
+        if(symbol === currentSymbol){
 
-/* =========================================================
-   BACKEND STATUS
-   ========================================================= */
+            option.selected = true;
+        }
 
-async function checkBackend(){
+        select.appendChild(option);
 
- try{
+    });
 
-   const health =
-   await api("/health");
+    if(
+        filtered.length &&
+        !filtered.includes(
+            currentSymbol
+        )
+    ){
 
-   $("backend").textContent =
-   health.ok
-   ? "ONLINE"
-   : "OFFLINE";
+        currentSymbol =
+            filtered[0];
 
-   $("backend").className =
-   health.ok
-   ? "good"
-   : "bad";
+        select.value =
+            currentSymbol;
+    }
 
-   $("mode").textContent =
-   health.mode || "UNKNOWN";
-
-   log(
-     `Backend connected — Mode: ${health.mode || "UNKNOWN"}`
-   );
-
-   const status =
-   await api("/api/status");
-
-   if(typeof status.auto !== "undefined"){
-
-     $("auto").checked =
-     !!status.auto;
-
-   }
-
- }catch(error){
-
-   $("backend").textContent =
-   "OFFLINE";
-
-   $("backend").className =
-   "bad";
-
-   $("mode").textContent =
-   "—";
-
-   log(
-     "Backend error: " +
-     error.message
-   );
-
- }
+    document.getElementById(
+        "selectedSymbol"
+    ).textContent =
+        currentSymbol;
 
 }
 
 
 /* =========================================================
-   TEST BACKEND BUTTON
-   ========================================================= */
+   SYMBOL CHANGE
+========================================================= */
 
-$("connect").onclick =
-checkBackend;
+document
+.getElementById("symbol")
+.addEventListener(
+    "change",
+    () => {
 
+        currentSymbol =
+            document.getElementById(
+                "symbol"
+            ).value;
 
-/* =========================================================
-   EMERGENCY STOP
-   ========================================================= */
+        document.getElementById(
+            "selectedSymbol"
+        ).textContent =
+            currentSymbol;
 
-$("stop").onclick =
-async function(){
+        lastSignalKey = null;
 
- try{
+        log(
+            "Selected symbol: " +
+            currentSymbol
+        );
 
-   const result =
-   await api(
-     "/api/emergency-stop",
-     {
-       method:"POST"
-     }
-   );
+        scan();
 
-   $("auto").checked=false;
-
-   log(
-     "EMERGENCY STOP ENABLED"
-   );
-
-   log(
-     JSON.stringify(result)
-   );
-
- }catch(error){
-
-   log(
-     "Emergency stop error: " +
-     error.message
-   );
-
- }
-
-};
+    }
+);
 
 
 /* =========================================================
-   AUTO TRADE
-   ========================================================= */
+   SEARCH
+========================================================= */
 
-$("auto").onchange =
-async function(){
+document
+.getElementById("symbolSearch")
+.addEventListener(
+    "input",
+    renderSymbols
+);
 
- const enabled =
- $("auto").checked;
 
- try{
+/* =========================================================
+   TIMEFRAME
+========================================================= */
 
-   const result =
-   await api(
-     "/api/auto",
-     {
-       method:"POST",
-       body:JSON.stringify({
-         enabled:enabled
-       })
-     }
-   );
+document
+.getElementById("timeframe")
+.addEventListener(
+    "change",
+    () => {
 
-   log(
-     "AUTO TRADE " +
-     (enabled ? "ON" : "OFF")
-   );
+        lastSignalKey = null;
 
-   if(result.mode){
+        log(
+            "Timeframe changed to " +
+            document.getElementById(
+                "timeframe"
+            ).value
+        );
 
-     $("mode").textContent =
-     result.mode.toUpperCase();
-
-   }
-
- }catch(error){
-
-   $("auto").checked=false;
-
-   log(
-     "AUTO TRADE ERROR: " +
-     error.message
-   );
-
- }
-
-};
+        scan();
+    }
+);
 
 
 /* =========================================================
    EMA
-   ========================================================= */
+========================================================= */
 
-function ema(values,length){
+function ema(values, period){
 
- if(values.length < length){
+    const k =
+        2 /
+        (period + 1);
 
-   return values[values.length-1];
+    let result =
+        values[0];
 
- }
+    for(
+        let i = 1;
+        i < values.length;
+        i++
+    ){
 
- const multiplier =
- 2/(length+1);
+        result =
+            values[i] * k +
+            result * (1-k);
+    }
 
- let result =
- values[0];
-
- for(
-   let i=1;
-   i<values.length;
-   i++
- ){
-
-   result =
-   values[i] * multiplier +
-   result * (1-multiplier);
-
- }
-
- return result;
-
+    return result;
 }
 
 
 /* =========================================================
    RSI
-   ========================================================= */
+========================================================= */
 
-function calculateRSI(values,length=14){
+function calculateRSI(
+    closes,
+    period = 14
+){
 
- if(values.length <= length){
+    if(
+        closes.length <
+        period + 1
+    ){
+        return 50;
+    }
 
-   return 50;
+    let gains = 0;
 
- }
+    let losses = 0;
 
- let gains=0;
- let losses=0;
+    for(
+        let i = 1;
+        i <= period;
+        i++
+    ){
 
- for(
-   let i=values.length-length;
-   i<values.length;
-   i++
- ){
+        const diff =
+            closes[i] -
+            closes[i-1];
 
-   const change =
-   values[i] -
-   values[i-1];
+        if(diff >= 0)
+            gains += diff;
 
-   if(change>0){
+        else
+            losses -= diff;
+    }
 
-     gains += change;
+    let avgGain =
+        gains / period;
 
-   }else{
+    let avgLoss =
+        losses / period;
 
-     losses -= change;
+    for(
+        let i = period + 1;
+        i < closes.length;
+        i++
+    ){
 
-   }
+        const diff =
+            closes[i] -
+            closes[i-1];
 
- }
+        const gain =
+            Math.max(
+                diff,
+                0
+            );
 
- if(losses===0){
+        const loss =
+            Math.max(
+                -diff,
+                0
+            );
 
-   return 100;
+        avgGain =
+            (
+                avgGain *
+                (period - 1) +
+                gain
+            ) / period;
 
- }
+        avgLoss =
+            (
+                avgLoss *
+                (period - 1) +
+                loss
+            ) / period;
+    }
 
- const rs =
- gains/losses;
+    if(avgLoss === 0)
+        return 100;
 
- return 100-(100/(1+rs));
+    const rs =
+        avgGain /
+        avgLoss;
+
+    return (
+        100 -
+        100 /
+        (1 + rs)
+    );
+}
+
+
+/* =========================================================
+   FETCH KLINES
+========================================================= */
+
+async function getKlines(){
+
+    const timeframe =
+        document.getElementById(
+            "timeframe"
+        ).value;
+
+    const url =
+        BINANCE_PUBLIC +
+        "/fapi/v1/klines" +
+        `?symbol=${currentSymbol}` +
+        `&interval=${timeframe}` +
+        `&limit=250`;
+
+    const response =
+        await fetch(url);
+
+    return await response.json();
 
 }
 
 
 /* =========================================================
-   MARKET SCANNER
-   ========================================================= */
+   SMC SCANNER
+========================================================= */
 
 async function scan(){
 
- const symbol =
- $("symbol").value;
+    try{
 
- const timeframe =
- $("tf").value;
+        const data =
+            await getKlines();
 
- try{
+        if(
+            !Array.isArray(data) ||
+            data.length < 205
+        ){
 
-   const url =
-   `https://api.binance.com/api/v3/klines` +
-   `?symbol=${symbol}` +
-   `&interval=${timeframe}` +
-   `&limit=220`;
+            log(
+                "Not enough candles for analysis."
+            );
 
-   const response =
-   await fetch(url);
+            return;
+        }
 
-   if(!response.ok){
 
-     throw new Error(
-       `Binance HTTP ${response.status}`
-     );
+        /*
+         Use CLOSED candles only.
+        The last Binance candle is still forming,
+        therefore remove it.
+        */
 
-   }
+        const candles =
+            data.slice(
+                0,
+                -1
+            );
 
-   const rows =
-   await response.json();
 
-   if(!Array.isArray(rows) || rows.length<205){
+        const closes =
+            candles.map(
+                c => Number(c[4])
+            );
 
-     throw new Error(
-       "Not enough market data"
-     );
+        const highs =
+            candles.map(
+                c => Number(c[2])
+            );
 
-   }
+        const lows =
+            candles.map(
+                c => Number(c[3])
+            );
 
 
-   /*
-      Ignore the currently forming candle.
-      Signals use CLOSED candles only.
-   */
+        const last =
+            candles[
+                candles.length - 1
+            ];
 
-   const candles =
-   rows
-   .slice(0,-1)
-   .map(row => ({
-     o:+row[1],
-     h:+row[2],
-     l:+row[3],
-     c:+row[4],
-     t:+row[0]
-   }));
+        const prev =
+            candles[
+                candles.length - 2
+            ];
 
+        const prev3 =
+            candles[
+                candles.length - 4
+            ];
 
-   const closes =
-   candles.map(c=>c.c);
 
+        const lastClose =
+            Number(last[4]);
 
-   const ema50 =
-   ema(closes,50);
+        const prevHigh =
+            Number(prev[2]);
 
-   const ema200 =
-   ema(closes,200);
+        const prevLow =
+            Number(prev[3]);
 
-   const rsi =
-   calculateRSI(closes,14);
+        const lastHigh =
+            Number(last[2]);
 
+        const lastLow =
+            Number(last[3]);
 
-   const last =
-   candles.at(-1);
 
-   const previous =
-   candles.at(-2);
+        /* EMA */
 
-   const previous3 =
-   candles.at(-3);
+        const ema50 =
+            ema(
+                closes.slice(-150),
+                50
+            );
 
+        const ema200 =
+            ema(
+                closes,
+                200
+            );
 
-   /*
-      TREND
-   */
 
-   const bullishTrend =
-   ema50 > ema200;
+        /* RSI */
 
-   const bearishTrend =
-   ema50 < ema200;
+        const rsi =
+            calculateRSI(
+                closes
+            );
 
 
-   /*
-      LIQUIDITY GRAB
-   */
+        document.getElementById(
+            "rsi"
+        ).textContent =
+            rsi.toFixed(2);
 
-   const bullishLiquidity =
-   last.l < previous.l &&
-   last.c > previous.l;
 
-   const bearishLiquidity =
-   last.h > previous.h &&
-   last.c < previous.h;
+        /* TREND */
 
+        const bullishTrend =
+            ema50 > ema200;
 
-   /*
-      BOS / CHoCH
-   */
+        const bearishTrend =
+            ema50 < ema200;
 
-   const bullishBOS =
-   last.c > previous.h;
 
-   const bearishBOS =
-   last.c < previous.l;
+        document.getElementById(
+            "trend"
+        ).textContent =
+            bullishTrend
+            ? "BULLISH"
+            : bearishTrend
+            ? "BEARISH"
+            : "NEUTRAL";
 
 
-   /*
-      FVG
-   */
+        /* LIQUIDITY GRAB */
 
-   const bullishFVG =
-   previous3.h < last.l;
+        const bullishLiquidity =
+            lastLow < prevLow &&
+            lastClose > prevLow;
 
-   const bearishFVG =
-   previous3.l > last.h;
+        const bearishLiquidity =
+            lastHigh > prevHigh &&
+            lastClose < prevHigh;
 
 
-   /*
-      FINAL SMC SIGNAL
-   */
+        /* BOS / CHoCH */
 
-   const buy =
-   bullishLiquidity &&
-   bullishBOS &&
-   bullishFVG &&
-   bullishTrend &&
-   rsi > 50;
+        const bullishBOS =
+            lastClose > prevHigh;
 
-   const sell =
-   bearishLiquidity &&
-   bearishBOS &&
-   bearishFVG &&
-   bearishTrend &&
-   rsi < 50;
+        const bearishBOS =
+            lastClose < prevLow;
 
 
-   const signal =
-   buy
-   ? "BUY"
-   : sell
-   ? "SELL"
-   : null;
+        /* FVG */
 
+        const bullishFVG =
+            Number(prev3[2]) <
+            lastLow;
 
-   /*
-      UI
-   */
+        const bearishFVG =
+            Number(prev3[3]) >
+            lastHigh;
 
-   $("trend").textContent =
-   bullishTrend
-   ? "BULLISH"
-   : bearishTrend
-   ? "BEARISH"
-   : "NEUTRAL";
 
-   $("trend").className =
-   bullishTrend
-   ? "good"
-   : bearishTrend
-   ? "bad"
-   : "warn";
+        /* RSI */
 
+        const bullishRSI =
+            rsi > 50;
 
-   $("rsi").textContent =
-   rsi.toFixed(2);
+        const bearishRSI =
+            rsi < 50;
 
 
-   $("confirm").innerHTML =
+        /* DISPLAY CONFIRMATIONS */
 
-   `Liquidity Grab:
-   ${
-     bullishLiquidity || bearishLiquidity
-     ? "CONFIRMED"
-     : "WAITING"
-   }<br>
+        setStatus(
+            "liq",
+            bullishLiquidity ||
+            bearishLiquidity
+        );
 
-   BOS / CHoCH:
-   ${
-     bullishBOS || bearishBOS
-     ? "CONFIRMED"
-     : "WAITING"
-   }<br>
+        setStatus(
+            "bos",
+            bullishBOS ||
+            bearishBOS
+        );
 
-   FVG:
-   ${
-     bullishFVG || bearishFVG
-     ? "CONFIRMED"
-     : "WAITING"
-   }<br>
+        setStatus(
+            "fvg",
+            bullishFVG ||
+            bearishFVG
+        );
 
-   EMA 50 / 200:
-   ${
-     bullishTrend || bearishTrend
-     ? "CONFIRMED"
-     : "WAITING"
-   }<br>
+        setStatus(
+            "ema",
+            bullishTrend ||
+            bearishTrend
+        );
 
-   RSI:
-   ${
-     rsi > 50 || rsi < 50
-     ? "CONFIRMED"
-     : "WAITING"
-   }`;
+        setStatus(
+            "rsiConfirm",
+            bullishRSI ||
+            bearishRSI
+        );
 
 
-   /*
-      NO SIGNAL
-   */
+        /* FULL BUY */
 
-   if(!signal){
+        const buy =
+            bullishLiquidity &&
+            bullishBOS &&
+            bullishFVG &&
+            bullishTrend &&
+            bullishRSI;
 
-     $("smc").textContent =
-     "NO SIGNAL";
 
-     $("smc").className =
-     "warn";
+        /* FULL SELL */
 
-     $("entry").textContent="—";
-     $("sl").textContent="—";
-     $("tp1").textContent="—";
-     $("tp2").textContent="—";
+        const sell =
+            bearishLiquidity &&
+            bearishBOS &&
+            bearishFVG &&
+            bearishTrend &&
+            bearishRSI;
 
-     return;
 
-   }
+        if(!buy && !sell){
 
+            document.getElementById(
+                "signal"
+            ).textContent =
+                "NO SIGNAL";
 
-   /*
-      RISK MODEL
+            document.getElementById(
+                "signal"
+            ).className =
+                "value wait";
 
-      0.3% distance from entry.
-      TP1 = 1.5R
-      TP2 = 2.5R
-   */
+            clearLevels();
 
-   const risk =
-   last.c * 0.003;
+            return;
+        }
 
-   const sl =
-   signal==="BUY"
-   ? last.c-risk
-   : last.c+risk;
 
-   const tp1 =
-   signal==="BUY"
-   ? last.c+risk*1.5
-   : last.c-risk*1.5;
+        /* ENTRY */
 
-   const tp2 =
-   signal==="BUY"
-   ? last.c+risk*2.5
-   : last.c-risk*2.5;
+        const entry =
+            lastClose;
 
 
-   $("smc").textContent =
-   signal;
+        /*
+         Risk = 0.3%
+         */
 
-   $("smc").className =
-   signal==="BUY"
-   ? "good"
-   : "bad";
+        const risk =
+            entry * 0.003;
 
 
-   $("entry").textContent =
-   last.c.toFixed(2);
+        let sl;
 
-   $("sl").textContent =
-   sl.toFixed(2);
+        let tp1;
 
-   $("tp1").textContent =
-   tp1.toFixed(2);
+        let tp2;
 
-   $("tp2").textContent =
-   tp2.toFixed(2);
+        let side;
 
 
-   /*
-      ONE SIGNAL PER CLOSED CANDLE
-   */
+        if(buy){
 
-   const signalKey =
-   `${symbol}:${timeframe}:${signal}:${last.t}`;
+            side = "BUY";
 
+            sl =
+                entry - risk;
 
-   if(
-     sessionStorage.getItem(signalKey)
-   ){
+            tp1 =
+                entry +
+                risk * 1.5;
 
-     return;
+            tp2 =
+                entry +
+                risk * 2.5;
 
-   }
+        }else{
 
+            side = "SELL";
 
-   sessionStorage.setItem(
-     signalKey,
-     "1"
-   );
+            sl =
+                entry + risk;
 
+            tp1 =
+                entry -
+                risk * 1.5;
 
-   /*
-      VOICE
-   */
+            tp2 =
+                entry -
+                risk * 2.5;
+        }
 
-   voice(
-     `${signal} signal on ${symbol}`
-   );
 
+        document.getElementById(
+            "signal"
+        ).textContent =
+            side;
 
-   log(
-     `${signal} CONFIRMED — ` +
-     `Entry ${last.c.toFixed(2)} ` +
-     `/ SL ${sl.toFixed(2)} ` +
-     `/ TP1 ${tp1.toFixed(2)} ` +
-     `/ TP2 ${tp2.toFixed(2)}`
-   );
+        document.getElementById(
+            "signal"
+        ).className =
+            side === "BUY"
+            ? "value buy"
+            : "value sell";
 
 
-   /*
-      AUTO TRADE
-   */
+        document.getElementById(
+            "entry"
+        ).textContent =
+            formatPrice(entry);
 
-   if($("auto").checked){
+        document.getElementById(
+            "sl"
+        ).textContent =
+            formatPrice(sl);
 
-     try{
+        document.getElementById(
+            "tp1"
+        ).textContent =
+            formatPrice(tp1);
 
-       const quantityUSDT =
-       Number($("size").value);
+        document.getElementById(
+            "tp2"
+        ).textContent =
+            formatPrice(tp2);
 
 
-       const result =
-       await api(
-         "/api/execute-signal",
-         {
-           method:"POST",
+        const candleTime =
+            Number(last[0]);
 
-           body:JSON.stringify({
 
-             symbol:symbol,
+        const signalKey =
+            `${currentSymbol}:` +
+            `${side}:` +
+            `${candleTime}`;
 
-             side:signal,
 
-             entry:last.c,
+        if(
+            signalKey !==
+            lastSignalKey
+        ){
 
-             sl:sl,
+            lastSignalKey =
+                signalKey;
 
-             tp1:tp1,
+            log(
+                `${currentSymbol} ${side} ` +
+                `Entry ${formatPrice(entry)} ` +
+                `SL ${formatPrice(sl)} ` +
+                `TP2 ${formatPrice(tp2)}`
+            );
 
-             tp2:tp2,
 
-             quantity_usdt:
-             quantityUSDT,
+            speak(
+                `${currentSymbol} ` +
+                `${side} signal`
+            );
 
-             candle_time:
-             last.t
 
-           })
+            /*
+             AUTO TRADE
+             */
 
-         }
-       );
+            if(autoTrade){
 
+                await executeTrade(
+                    side,
+                    entry,
+                    sl,
+                    tp1,
+                    tp2,
+                    candleTime
+                );
+            }
 
-       log(
-         "AUTO ORDER: " +
-         JSON.stringify(result)
-       );
+        }
 
+    }catch(error){
 
-     }catch(error){
+        log(
+            "Scanner error: " +
+            error.message
+        );
 
-       log(
-         "ORDER ERROR: " +
-         error.message
-       );
-
-     }
-
-   }
-
- }catch(error){
-
-   log(
-     "Market error: " +
-     error.message
-   );
-
- }
+    }
 
 }
+
+
+/* =========================================================
+   STATUS DISPLAY
+========================================================= */
+
+function setStatus(
+    id,
+    confirmed
+){
+
+    const element =
+        document.getElementById(id);
+
+    element.textContent =
+        confirmed
+        ? "CONFIRMED"
+        : "WAITING";
+
+    element.style.color =
+        confirmed
+        ? "#69e991"
+        : "#ffd76b";
+}
+
+
+/* =========================================================
+   FORMAT PRICE
+========================================================= */
+
+function formatPrice(price){
+
+    if(price >= 1000)
+        return price.toFixed(2);
+
+    if(price >= 1)
+        return price.toFixed(4);
+
+    return price.toFixed(8);
+
+}
+
+
+/* =========================================================
+   CLEAR LEVELS
+========================================================= */
+
+function clearLevels(){
+
+    document.getElementById(
+        "entry"
+    ).textContent = "—";
+
+    document.getElementById(
+        "sl"
+    ).textContent = "—";
+
+    document.getElementById(
+        "tp1"
+    ).textContent = "—";
+
+    document.getElementById(
+        "tp2"
+    ).textContent = "—";
+}
+
+
+/* =========================================================
+   EXECUTE DEMO TRADE
+========================================================= */
+
+async function executeTrade(
+    side,
+    entry,
+    sl,
+    tp1,
+    tp2,
+    candleTime
+){
+
+    try{
+
+        const size =
+            Number(
+                document.getElementById(
+                    "tradeSize"
+                ).value
+            );
+
+        log(
+            `AUTO TRADE request: ` +
+            `${currentSymbol} ${side}`
+        );
+
+
+        const response =
+            await fetch(
+                BACKEND +
+                "/api/execute-signal",
+                {
+                    method:"POST",
+
+                    headers:{
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:JSON.stringify({
+
+                        symbol:
+                            currentSymbol,
+
+                        side:
+                            side,
+
+                        entry:
+                            entry,
+
+                        sl:
+                            sl,
+
+                        tp1:
+                            tp1,
+
+                        tp2:
+                            tp2,
+
+                        quantity_usdt:
+                            size,
+
+                        candle_time:
+                            candleTime
+
+                    })
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if(!response.ok){
+
+            log(
+                "AUTO TRADE rejected: " +
+                JSON.stringify(result)
+            );
+
+            return;
+        }
+
+
+        log(
+            "DEMO TRADE OPENED: " +
+            JSON.stringify(result)
+        );
+
+
+        speak(
+            `${currentSymbol} ` +
+            `${side} trade opened`
+        );
+
+
+    }catch(error){
+
+        log(
+            "Trade error: " +
+            error.message
+        );
+    }
+
+}
+
+
+/* =========================================================
+   BACKEND TEST
+========================================================= */
+
+async function testBackend(){
+
+    try{
+
+        const response =
+            await fetch(
+                BACKEND +
+                "/api/status"
+            );
+
+        const data =
+            await response.json();
+
+
+        if(
+            data.status ===
+            "online"
+        ){
+
+            document.getElementById(
+                "backend"
+            ).textContent =
+                "ONLINE";
+
+            document.getElementById(
+                "mode"
+            ).textContent =
+                data.mode;
+
+            log(
+                `Backend connected — Mode: ${data.mode}`
+            );
+
+        }else{
+
+            document.getElementById(
+                "backend"
+            ).textContent =
+                "OFFLINE";
+        }
+
+
+    }catch(error){
+
+        document.getElementById(
+            "backend"
+        ).textContent =
+            "OFFLINE";
+
+        log(
+            "Backend error: " +
+            error.message
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   AUTO BUTTON
+========================================================= */
+
+document
+.getElementById("autoBtn")
+.addEventListener(
+    "click",
+    async () => {
+
+        const newState =
+            !autoTrade;
+
+
+        /*
+         Safety:
+         backend must approve AUTO state.
+        */
+
+        try{
+
+            const response =
+                await fetch(
+                    BACKEND +
+                    "/api/auto",
+                    {
+                        method:"POST",
+
+                        headers:{
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:JSON.stringify({
+                            enabled:
+                                newState
+                        })
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if(!response.ok){
+
+                log(
+                    "AUTO TRADE error: " +
+                    JSON.stringify(data)
+                );
+
+                return;
+            }
+
+
+            autoTrade =
+                newState;
+
+
+            document.getElementById(
+                "autoBtn"
+            ).textContent =
+                autoTrade
+                ? "AUTO TRADE: ON"
+                : "AUTO TRADE: OFF";
+
+
+            log(
+                autoTrade
+                ? "AUTO TRADE ENABLED — DEMO"
+                : "AUTO TRADE DISABLED"
+            );
+
+        }catch(error){
+
+            log(
+                "AUTO error: " +
+                error.message
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   EMERGENCY STOP
+========================================================= */
+
+document
+.getElementById("emergency")
+.addEventListener(
+    "click",
+    async () => {
+
+        try{
+
+            const response =
+                await fetch(
+                    BACKEND +
+                    "/api/emergency-stop",
+                    {
+                        method:"POST"
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            autoTrade =
+                false;
+
+
+            document.getElementById(
+                "autoBtn"
+            ).textContent =
+                "AUTO TRADE: OFF";
+
+
+            log(
+                "EMERGENCY STOP ACTIVATED"
+            );
+
+
+        }catch(error){
+
+            log(
+                "Emergency error: " +
+                error.message
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   VOICE
+========================================================= */
+
+document
+.getElementById("voiceBtn")
+.addEventListener(
+    "click",
+    () => {
+
+        voice =
+            !voice;
+
+        document.getElementById(
+            "voiceBtn"
+        ).textContent =
+            voice
+            ? "VOICE: ON"
+            : "VOICE: OFF";
+
+    }
+);
+
+
+/* =========================================================
+   REFRESH SYMBOLS
+========================================================= */
+
+document
+.getElementById("refreshSymbols")
+.addEventListener(
+    "click",
+    loadSymbols
+);
+
+
+/* =========================================================
+   TEST BACKEND
+========================================================= */
+
+document
+.getElementById("testBackend")
+.addEventListener(
+    "click",
+    testBackend
+);
 
 
 /* =========================================================
    START
-   ========================================================= */
+========================================================= */
 
-setInterval(
- scan,
- 15000
-);
+async function start(){
 
-scan();
+    await loadSymbols();
 
-checkBackend();
+    await testBackend();
 
-$("tf").onchange =
-scan;
+    await scan();
+
+    /*
+     Scan every 15 seconds.
+    */
+
+    setInterval(
+        scan,
+        15000
+    );
+
+    /*
+     Refresh Binance symbols every 5 minutes.
+    */
+
+    setInterval(
+        loadSymbols,
+        300000
+    );
+}
+
+
+start();
 
 </script>
 
