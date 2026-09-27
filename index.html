@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SMC Binance Auto Trader V2</title>
+<style>
+body{margin:0;background:#07100b;color:#eaf5ec;font-family:Arial}.wrap{max-width:1100px;margin:auto;padding:18px}
+h1{font-size:22px}.bar,.grid{display:flex;gap:10px;flex-wrap:wrap}.card{background:#0d1811;border:1px solid #23412b;border-radius:12px;padding:14px;margin-top:12px;flex:1;min-width:180px}
+input,select,button{background:#101d14;color:#fff;border:1px solid #31543a;border-radius:8px;padding:10px}button{cursor:pointer}
+.good{color:#43e58b}.bad{color:#ff6877}.warn{color:#ffd166}.log{height:170px;overflow:auto;background:#040804;padding:10px;font:12px monospace}
+.small{font-size:12px;color:#9db1a1;line-height:1.6}.pill{padding:7px 10px;border-radius:20px;background:#17271b}
+</style></head>
+<body><div class="wrap">
+<h1>SMC Binance Auto Trader V2</h1>
+<div class="bar">
+<select id="symbol"><option>BTCUSDT</option></select>
+<select id="tf"><option value="5m">5 Min</option><option value="15m">15 Min</option><option value="1m">1 Min</option><option value="1h">1 Hour</option></select>
+<input id="size" type="number" value="20" min="5" step="1" placeholder="USDT">
+<button id="connect">Test Backend</button>
+<button id="stop">EMERGENCY STOP</button>
+<label class="pill"><input id="auto" type="checkbox"> AUTO TRADE</label>
+<label class="pill"><input id="voice" type="checkbox" checked> VOICE</label>
+</div>
+<div class="grid">
+<div class="card"><b>Backend</b><div id="backend">OFFLINE</div></div>
+<div class="card"><b>Trend</b><div id="trend">—</div></div>
+<div class="card"><b>RSI</b><div id="rsi">—</div></div>
+<div class="card"><b>SMC</b><div id="smc">WAITING</div></div>
+<div class="card"><b>Entry</b><div id="entry">—</div></div>
+<div class="card"><b>SL</b><div id="sl">—</div></div>
+<div class="card"><b>TP1</b><div id="tp1">—</div></div>
+<div class="card"><b>TP2</b><div id="tp2">—</div></div>
+</div>
+<div class="card"><b>SMC Confirmation</b><div id="confirm" class="small">Waiting for closed candle...</div></div>
+<div class="card"><b>System Log</b><div id="log" class="log"></div></div>
+<p class="small">Testnet first. API credentials belong only in the backend .env file. Never put Binance secrets in GitHub or this page.</p>
+</div>
+<script>
+const API=localStorage.getItem("SMC_BACKEND")||"http://127.0.0.1:8000", $=x=>document.getElementById(x);
+function log(x){$("log").innerHTML+=`[${new Date().toLocaleTimeString()}] ${x}<br>`;$("log").scrollTop=$("log").scrollHeight}
+function voice(x){if($("voice").checked&&speechSynthesis){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(x);u.lang="en-US";speechSynthesis.speak(u)}}
+async function api(path,opt={}){let r=await fetch(API+path,{...opt,headers:{"Content-Type":"application/json"}});let j=await r.json();if(!r.ok)throw Error(j.detail||"Backend error");return j}
+async function check(){try{let j=await api("/api/status");$("backend").textContent=j.mode.toUpperCase()+" / "+(j.auto?"AUTO ON":"AUTO OFF");$("backend").className=j.mode=="testnet"?"good":"warn";log("Backend connected.")}catch(e){$("backend").textContent="OFFLINE";$("backend").className="bad";log(e.message)}}
+$("connect").onclick=check;
+$("stop").onclick=async()=>{try{await api("/api/emergency-stop",{method:"POST"});$("auto").checked=false;log("Emergency stop enabled.")}catch(e){log(e.message)}};
+$("auto").onchange=async()=>{try{await api("/api/auto",{method:"POST",body:JSON.stringify({enabled:$("auto").checked})});log("AUTO TRADE "+($("auto").checked?"ON":"OFF"))}catch(e){$("auto").checked=false;log(e.message)}};
+
+async function scan(){
+ let symbol=$("symbol").value,tf=$("tf").value;
+ try{
+  let r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${tf}&limit=220`), rows=await r.json();
+  let c=rows.slice(0,-1).map(x=>({o:+x[1],h:+x[2],l:+x[3],c:+x[4],t:+x[0]})), close=c.map(x=>x.c);
+  function ema(a,n){let k=2/(n+1),e=a[0];for(let i=1;i<a.length;i++)e=a[i]*k+e*(1-k);return e}
+  let e50=ema(close,50),e200=ema(close,200),g=0,l=0;
+  for(let i=close.length-14;i<close.length;i++){let d=close[i]-close[i-1];if(d>0)g+=d;else l-=d}
+  let rsi=l?100-100/(1+g/l):100,last=c.at(-1),p=c.at(-2),p3=c.at(-3);
+  let bull=e50>e200,bear=e50<e200;
+  let lb=last.l<p.l&&last.c>p.l, ls=last.h>p.h&&last.c<p.h;
+  let bb=last.c>p.h,bs=last.c<p.l;
+  let bf=p3.h<last.l,sf=p3.l>last.h;
+  let buy=lb&&bb&&bf&&bull&&rsi>50,sell=ls&&bs&&sf&&bear&&rsi<50,signal=buy?"BUY":sell?"SELL":null;
+  $("trend").textContent=bull?"BULLISH":bear?"BEARISH":"NEUTRAL";$("trend").className=bull?"good":bear?"bad":"warn";
+  $("rsi").textContent=rsi.toFixed(2);
+  $("confirm").innerHTML=`Liquidity Grab: ${lb||ls?"CONFIRMED":"WAITING"}<br>BOS/CHoCH: ${bb||bs?"CONFIRMED":"WAITING"}<br>FVG: ${bf||sf?"CONFIRMED":"WAITING"}<br>EMA 50/200: ${bull||bear?"CONFIRMED":"WAITING"}<br>RSI: ${rsi>50||rsi<50?"CONFIRMED":"WAITING"}`;
+  if(!signal){$("smc").textContent="NO SIGNAL";return}
+  let risk=last.c*.003,sl=signal=="BUY"?last.c-risk:last.c+risk,tp1=signal=="BUY"?last.c+risk*1.5:last.c-risk*1.5,tp2=signal=="BUY"?last.c+risk*2.5:last.c-risk*2.5;
+  $("smc").textContent=signal;$("smc").className=signal=="BUY"?"good":"bad";$("entry").textContent=last.c.toFixed(2);$("sl").textContent=sl.toFixed(2);$("tp1").textContent=tp1.toFixed(2);$("tp2").textContent=tp2.toFixed(2);
+  let key=`${symbol}:${tf}:${signal}:${last.t}`;
+  if(!sessionStorage.getItem(key)){sessionStorage.setItem(key,"1");voice(signal);log(`${signal} CONFIRMED — Entry ${last.c.toFixed(2)} / SL ${sl.toFixed(2)} / TP2 ${tp2.toFixed(2)}`);
+    if($("auto").checked){try{let j=await api("/api/execute-signal",{method:"POST",body:JSON.stringify({symbol,side:signal,entry:last.c,sl,tp1,tp2,quantity_usdt:+$("size").value,candle_time:last.t})});log("AUTO ORDER: "+JSON.stringify(j))}catch(e){log("ORDER ERROR: "+e.message)}}
+  }
+ }catch(e){log("Market error: "+e.message)}
+}
+setInterval(scan,15000);scan();check();
+$("tf").onchange=scan;
+</script></body></html>
