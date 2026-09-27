@@ -1,4 +1,7 @@
-import os, time, hmac, hashlib
+import os
+import time
+import hmac
+import hashlib
 from decimal import Decimal, ROUND_DOWN
 from urllib.parse import urlencode
 
@@ -13,14 +16,13 @@ load_dotenv()
 KEY = os.getenv("BINANCE_API_KEY", "")
 SECRET = os.getenv("BINANCE_API_SECRET", "")
 
-# Binance Futures Demo Trading
 BASE = os.getenv(
     "BINANCE_BASE_URL",
     "https://demo-fapi.binance.com"
 ).rstrip("/")
 
-MAX = float(os.getenv("MAX_USDT_PER_TRADE", "20"))
-LEV = int(os.getenv("LEVERAGE", "1"))
+MAX_USDT = float(os.getenv("MAX_USDT_PER_TRADE", "20"))
+LEVERAGE = int(os.getenv("LEVERAGE", "1"))
 
 app = FastAPI(title="SMC Binance Auto Trader V2")
 
@@ -54,8 +56,9 @@ class Signal(BaseModel):
     candle_time: int
 
 
-def signed(params):
+def signed_params(params=None):
     p = dict(params or {})
+
     p["timestamp"] = int(time.time() * 1000)
     p["recvWindow"] = 5000
 
@@ -74,68 +77,77 @@ async def req(method, path, params=None):
     if not KEY or not SECRET:
         raise HTTPException(
             500,
-            "API credentials missing"
+            "BINANCE_API_KEY or BINANCE_API_SECRET is missing"
         )
 
-    async with httpx.AsyncClient(timeout=15) as c:
-        r = await c.request(
+    async with httpx.AsyncClient(timeout=15) as client:
+        response = await client.request(
             method,
             BASE + path,
-            params=signed(params or {}),
+            params=signed_params(params),
             headers={
                 "X-MBX-APIKEY": KEY
             },
         )
 
-    if r.status_code >= 400:
+    if response.status_code >= 400:
         raise HTTPException(
-            r.status_code,
-            r.text
+            response.status_code,
+            response.text
         )
 
-    return r.json()
+    return response.json()
 
 
 async def public_get(path, params=None):
-    async with httpx.AsyncClient(timeout=15) as c:
-        r = await c.get(
+    async with httpx.AsyncClient(timeout=15) as client:
+        response = await client.get(
             BASE + path,
             params=params or {}
         )
 
-    if r.status_code >= 400:
+    if response.status_code >= 400:
         raise HTTPException(
-            r.status_code,
-            r.text
+            response.status_code,
+            response.text
         )
 
-    return r.json()
+    return response.json()
 
 
-async def info(sym):
+def floor_quantity(quantity, step_size):
+    q = Decimal(str(quantity))
+    step = Decimal(str(step_size))
+
+    return float(
+        (q / step).to_integral_value(
+            rounding=ROUND_DOWN
+        ) * step
+    )
+
+
+async def symbol_info(symbol):
     data = await public_get(
         "/fapi/v1/exchangeInfo"
     )
 
-    for s in data["symbols"]:
-        if s["symbol"] == sym:
-            return s
+    for item in data.get("symbols", []):
+        if item["symbol"] == symbol:
+            return item
 
     raise HTTPException(
         400,
-        "Unknown Futures symbol"
+        f"Unknown Futures symbol: {symbol}"
     )
 
 
-def floorq(q, step):
-    a = Decimal(str(q))
-    b = Decimal(str(step))
-
-    return float(
-        (a / b).to_integral_value(
-            rounding=ROUND_DOWN
-        ) * b
-    )
+@app.get("/")
+async def root():
+    return {
+        "bot": "SMC Binance Auto Trader V2",
+        "status": "online",
+        "mode": "DEMO"
+    }
 
 
 @app.get("/health")
@@ -159,25 +171,52 @@ async def status():
     }
 
 
-@app.post("/api/auto")
-async def auto(a: Auto):
-
-    if a.enabled and state["emergency"]:
-        raise HTTPException(
-            409,
-            "Emergency stop is enabled. Restart backend to clear it."
-        )
-
-    state["auto"] = a.enabled
+# SAFE API CONNECTION TEST
+# This reads the Demo Futures account only.
+# It does NOT open a trade.
+@app.get("/api/account")
+async def account():
+    data = await req(
+        "GET",
+        "/fapi/v2/account"
+    )
 
     return {
+        "ok": True,
+        "mode": "DEMO",
+        "accountType": data.get("accountType"),
+        "totalWalletBalance": data.get(
+            "totalWalletBalance"
+        ),
+        "availableBalance": data.get(
+            "availableBalance"
+        ),
+        "totalUnrealizedProfit": data.get(
+            "totalUnrealizedProfit"
+        ),
+    }
+
+
+@app.post("/api/auto")
+async def set_auto(data: Auto):
+
+    if data.enabled and state["emergency"]:
+        raise HTTPException(
+            409,
+            "Emergency stop is enabled"
+        )
+
+    state["auto"] = data.enabled
+
+    return {
+        "ok": True,
         "enabled": state["auto"],
         "mode": "DEMO"
     }
 
 
 @app.post("/api/emergency-stop")
-async def emergency():
+async def emergency_stop():
 
     state["emergency"] = True
     state["auto"] = False
@@ -190,7 +229,7 @@ async def emergency():
 
 
 @app.post("/api/execute-signal")
-async def execute(s: Signal):
+async def execute_signal(signal: Signal):
 
     if state["emergency"]:
         raise HTTPException(
@@ -201,7 +240,7 @@ async def execute(s: Signal):
     if not state["auto"]:
         raise HTTPException(
             409,
-            "AUTO TRADE OFF"
+            "AUTO TRADE is OFF"
         )
 
     if state["active"]:
@@ -210,45 +249,60 @@ async def execute(s: Signal):
             "One trade is already active"
         )
 
-    if s.side not in ("BUY", "SELL"):
+    if signal.side not in ("BUY", "SELL"):
         raise HTTPException(
             400,
             "Invalid side"
         )
 
-    if s.quantity_usdt > MAX:
+    if signal.quantity_usdt > MAX_USDT:
         raise HTTPException(
             400,
-            f"Trade size exceeds {MAX} USDT"
+            f"Trade size exceeds {MAX_USDT} USDT"
         )
 
-    # Prevent duplicate signal on the same candle
-    k = f"{s.symbol}:{s.side}:{s.candle_time}"
+    signal_key = (
+        f"{signal.symbol}:"
+        f"{signal.side}:"
+        f"{signal.candle_time}"
+    )
 
-    if state["last"] == k:
+    if state["last"] == signal_key:
         raise HTTPException(
             409,
             "Duplicate signal"
         )
 
-    # Get Binance symbol information
-    inf = await info(s.symbol)
+    info = await symbol_info(signal.symbol)
 
-    lot = next(
-        x for x in inf["filters"]
-        if x["filterType"]
-        in ("LOT_SIZE", "MARKET_LOT_SIZE")
+    lot_filter = next(
+        (
+            f for f in info["filters"]
+            if f["filterType"]
+            in ("LOT_SIZE", "MARKET_LOT_SIZE")
+        ),
+        None
     )
 
-    qty = floorq(
-        s.quantity_usdt / s.entry,
-        float(lot["stepSize"])
-    )
-
-    if qty <= 0:
+    if not lot_filter:
         raise HTTPException(
             400,
-            "Quantity too small for symbol step size"
+            "LOT_SIZE filter not found"
+        )
+
+    step_size = float(
+        lot_filter["stepSize"]
+    )
+
+    quantity = floor_quantity(
+        signal.quantity_usdt / signal.entry,
+        step_size
+    )
+
+    if quantity <= 0:
+        raise HTTPException(
+            400,
+            "Quantity is too small"
         )
 
     # Set leverage
@@ -256,74 +310,82 @@ async def execute(s: Signal):
         "POST",
         "/fapi/v1/leverage",
         {
-            "symbol": s.symbol,
-            "leverage": LEV
+            "symbol": signal.symbol,
+            "leverage": LEVERAGE
         }
     )
 
     # MARKET ENTRY
-    entry = await req(
+    entry_order = await req(
         "POST",
         "/fapi/v1/order",
         {
-            "symbol": s.symbol,
-            "side": s.side,
+            "symbol": signal.symbol,
+            "side": signal.side,
             "type": "MARKET",
-            "quantity": qty,
+            "quantity": quantity,
             "newOrderRespType": "RESULT"
-        },
+        }
     )
 
     close_side = (
         "SELL"
-        if s.side == "BUY"
+        if signal.side == "BUY"
         else "BUY"
     )
 
     # STOP LOSS
-    # Current Binance USD-M conditional order endpoint
-    sl = await req(
+    sl_order = await req(
         "POST",
         "/fapi/v1/algoOrder",
         {
             "algoType": "CONDITIONAL",
-            "symbol": s.symbol,
+            "symbol": signal.symbol,
             "side": close_side,
             "type": "STOP_MARKET",
-            "triggerPrice": s.sl,
+            "triggerPrice": signal.sl,
             "closePosition": "true",
-            "workingType": "MARK_PRICE",
-        },
+            "workingType": "MARK_PRICE"
+        }
     )
 
     # TAKE PROFIT 2
-    tp2 = await req(
+    tp2_order = await req(
         "POST",
         "/fapi/v1/algoOrder",
         {
             "algoType": "CONDITIONAL",
-            "symbol": s.symbol,
+            "symbol": signal.symbol,
             "side": close_side,
             "type": "TAKE_PROFIT_MARKET",
-            "triggerPrice": s.tp2,
+            "triggerPrice": signal.tp2,
             "closePosition": "true",
-            "workingType": "MARK_PRICE",
-        },
+            "workingType": "MARK_PRICE"
+        }
     )
 
     state["active"] = {
-        "symbol": s.symbol,
-        "side": s.side,
-        "qty": qty,
-        "entry_order_id": entry.get("orderId"),
-        "sl_algo_id": sl.get("algoId"),
-        "tp2_algo_id": tp2.get("algoId"),
-        "entry_price": entry.get("avgPrice"),
-        "sl_price": s.sl,
-        "tp2_price": s.tp2,
+        "symbol": signal.symbol,
+        "side": signal.side,
+        "quantity": quantity,
+        "entry_order_id": entry_order.get(
+            "orderId"
+        ),
+        "sl_algo_id": sl_order.get(
+            "algoId"
+        ),
+        "tp2_algo_id": tp2_order.get(
+            "algoId"
+        ),
+        "entry_price": entry_order.get(
+            "avgPrice"
+        ),
+        "sl_price": signal.sl,
+        "tp1_price": signal.tp1,
+        "tp2_price": signal.tp2,
     }
 
-    state["last"] = k
+    state["last"] = signal_key
 
     return {
         "ok": True,
@@ -333,7 +395,7 @@ async def execute(s: Signal):
 
 
 @app.post("/api/close")
-async def close():
+async def close_trade():
 
     if not state["active"]:
         return {
@@ -341,25 +403,29 @@ async def close():
             "message": "No active trade"
         }
 
-    a = state["active"]
+    active = state["active"]
 
-    side = (
+    close_side = (
         "SELL"
-        if a["side"] == "BUY"
+        if active["side"] == "BUY"
         else "BUY"
     )
 
-    r = await req(
+    result = await req(
         "POST",
         "/fapi/v1/order",
         {
-            "symbol": a["symbol"],
-            "side": side,
+            "symbol": active["symbol"],
+            "side": close_side,
             "type": "MARKET",
-            "quantity": a["qty"]
-        },
+            "quantity": active["quantity"]
+        }
     )
 
     state["active"] = None
 
-    return r
+    return {
+        "ok": True,
+        "mode": "DEMO",
+        "result": result
+    }
