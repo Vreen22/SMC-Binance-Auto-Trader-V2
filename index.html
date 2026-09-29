@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#03070a">
-
 <title>SMC Binance Auto Trader V2</title>
 
 <style>
@@ -18,902 +17,1540 @@
  --red:#ff3145;
  --blue:#18a8ff;
  --yellow:#ffd21c;
- --purple:#d34cff;
 }
-
-*{
- box-sizing:border-box;
-}
-
+*{box-sizing:border-box}
 body{
- margin:0;
- background:
- radial-gradient(circle at 50% -10%,#0b2430 0,#03070a 42%);
- color:var(--text);
- font-family:Arial,Helvetica,sans-serif;
+ margin:0;background:radial-gradient(circle at 50% -10%,#0b2430 0,#03070a 42%);
+ color:var(--text);font-family:Arial,Helvetica,sans-serif
 }
-
-.app{
- max-width:1100px;
- margin:auto;
- padding:14px 14px 34px;
-}
-
+.app{max-width:1100px;margin:auto;padding:14px 14px 34px}
 .top{
- display:flex;
- align-items:center;
- gap:12px;
- padding:7px 2px 14px;
- border-bottom:1px solid #0d2734;
+ display:flex;align-items:center;gap:12px;padding:7px 2px 14px;
+ border-bottom:1px solid #0d2734
 }
-
-.logo{
- font-size:24px;
- font-weight:900;
-}
-
-.crown{
- color:#ffd21c;
-}
-
+.logo{font-size:24px;font-weight:900}
+.crown{color:#ffd21c}
 .pill{
- padding:7px 13px;
- border-radius:10px;
- border:1px solid #0877a8;
- background:#062335;
- color:#21c7ff;
- font-weight:800;
+ padding:7px 13px;border-radius:10px;border:1px solid #0877a8;
+ background:#062335;color:#21c7ff;font-weight:800
 }
-
-.online{
- margin-left:auto;
- color:var(--green);
- font-weight:800;
-}
-
+.online{margin-left:auto;color:var(--green);font-weight:800}
 .controls{
- display:grid;
- grid-template-columns:1.35fr .7fr .7fr .9fr;
- gap:10px;
- padding:12px 0;
+ display:grid;grid-template-columns:1.35fr .7fr .7fr .9fr;
+ gap:10px;padding:12px 0
 }
-
-.field label{
- display:block;
- color:var(--muted);
- font-size:13px;
- margin-bottom:6px;
+.field label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
+.field input,.field select{
+ width:100%;height:46px;background:#07131a;border:1px solid #164258;
+ border-radius:11px;color:#fff;padding:0 13px;font-size:15px;outline:none
 }
-
-.field input,
-.field select{
- width:100%;
- height:46px;
- background:#07131a;
- border:1px solid #164258;
- border-radius:11px;
- color:#fff;
- padding:0 13px;
- font-size:15px;
- outline:none;
-}
-
 .switch{
- display:flex;
- height:46px;
- border:1px solid #164258;
- border-radius:11px;
- overflow:hidden;
+ display:flex;height:46px;border:1px solid #164258;border-radius:11px;overflow:hidden
 }
-
 .switch button{
- flex:1;
- border:0;
- background:#07131a;
- color:#78909a;
- font-weight:800;
+ flex:1;border:0;background:#07131a;color:#78909a;font-weight:800
 }
-
-.switch .active{
- background:#00b957;
- color:#fff;
-}
-
+.switch .active{background:#00b957;color:#fff}
+.switch button:disabled{opacity:.5}
 .checks{
- display:flex;
- flex-wrap:wrap;
- gap:9px;
- padding:4px 0 13px;
- border-bottom:1px solid #0d2734;
+ display:flex;flex-wrap:wrap;gap:9px;padding:4px 0 13px;
+ border-bottom:1px solid #0d2734
 }
-
-.check{
- font-size:13px;
- color:#d4e2e6;
-}
-
+.check{font-size:13px;color:#d4e2e6}
 .check b{
- display:inline-grid;
- place-items:center;
- width:19px;
- height:19px;
- border-radius:5px;
- background:#10c86a;
- color:#001b0d;
- margin-right:5px;
+ display:inline-grid;place-items:center;width:19px;height:19px;border-radius:5px;
+ background:#10c86a;color:#001b0d;margin-right:5px
 }
-
 .layout{
- display:grid;
- grid-template-columns:minmax(0,2.1fr) minmax(260px,.9fr);
- gap:14px;
- margin-top:14px;
+ display:grid;grid-template-columns:minmax(0,2.1fr) minmax(260px,.9fr);
+ gap:14px;margin-top:14px
 }
-
 .panel{
  background:linear-gradient(180deg,#071118,#050d12);
- border:1px solid #103b4d;
- border-radius:17px;
- box-shadow:0 0 22px #00141d80;
- padding:14px;
+ border:1px solid #103b4d;border-radius:17px;box-shadow:0 0 22px #00141d80;
+ padding:14px
 }
-
-.chartHead{
- display:flex;
- justify-content:space-between;
- align-items:center;
- margin-bottom:5px;
-}
-
-.chartTitle{
- font-size:16px;
- font-weight:800;
-}
-
-.price{
- color:var(--green);
- font-size:14px;
-}
-
+.chartHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.chartTitle{font-size:16px;font-weight:800}
+.price{color:var(--green);font-size:14px}
 .chart{
- height:420px;
- border:1px solid #0d3444;
- border-radius:12px;
- overflow:hidden;
- background:#03090d;
+ height:420px;border:1px solid #0d3444;border-radius:12px;
+ overflow:hidden;background:#03090d
 }
-
-.chart canvas{
- width:100%;
- height:100%;
- display:block;
-}
-
+canvas{width:100%;height:100%;display:block}
 .signal{
- min-height:420px;
- border-radius:17px;
- border:1px solid #0e5832;
+ min-height:420px;border-radius:17px;border:1px solid #0e5832;
  background:linear-gradient(160deg,#06140d,#03100a);
- display:flex;
- flex-direction:column;
- align-items:center;
- justify-content:center;
- text-align:center;
- padding:18px;
- position:relative;
- overflow:hidden;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ text-align:center;padding:18px;position:relative;overflow:hidden
 }
-
-.signal.sell{
- border-color:#6b1622;
- background:linear-gradient(160deg,#18080b,#0d0305);
-}
-
-.signalTitle{
- font-size:28px;
- font-weight:1000;
-}
-
-.signal.buy .signalTitle{
- color:var(--green);
-}
-
-.signal.sell .signalTitle{
- color:#ff5365;
-}
-
-.arrow{
- width:180px;
- height:150px;
- margin:10px 0;
- position:relative;
-}
-
-.arrow:before{
- content:"";
- position:absolute;
- left:45px;
- top:58px;
- width:95px;
- height:42px;
- border-radius:8px;
- transform:rotate(-38deg);
- background:linear-gradient(90deg,#00a94e,#24ff88);
- box-shadow:0 0 30px #00f07a;
-}
-
-.arrow:after{
- content:"";
- position:absolute;
- right:12px;
- top:15px;
- border-left:42px solid #24ff88;
- border-top:30px solid transparent;
- border-bottom:30px solid transparent;
- transform:rotate(-38deg);
-}
-
-.sell .arrow:before{
- background:linear-gradient(90deg,#c8172b,#ff5262);
- box-shadow:0 0 30px #ff3145;
- transform:rotate(38deg);
-}
-
-.sell .arrow:after{
- border-left-color:#ff5262;
- transform:rotate(38deg);
- top:95px;
-}
-
-.conf{
- font-size:13px;
- color:#9fb4bc;
-}
-
-.conf strong{
- display:block;
- font-size:36px;
- color:#eaf5f8;
- margin:5px;
-}
-
-.trend{
- font-weight:900;
- font-size:18px;
- color:var(--green);
-}
-
-.sell .trend{
- color:#ff5365;
-}
-
+.signal.sell{border-color:#6b1622;background:linear-gradient(160deg,#18080b,#0d0305)}
+.signalTitle{font-size:28px;font-weight:1000}
+.signal.buy .signalTitle{color:var(--green)}
+.signal.sell .signalTitle{color:#ff5365}
+.arrow{font-size:100px;line-height:1;margin:20px}
+.conf{font-size:13px;color:#9fb4bc}
+.conf strong{display:block;font-size:36px;color:#eaf5f8;margin:5px}
+.trend{font-weight:900;font-size:18px;color:var(--green)}
+.sell .trend{color:#ff5365}
 .metrics{
- display:grid;
- grid-template-columns:repeat(4,1fr);
- gap:10px;
- margin-top:14px;
+ display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px
 }
-
 .metric{
- padding:14px;
- border:1px solid #124158;
- border-radius:14px;
- background:#061017;
+ padding:14px;border:1px solid #124158;border-radius:14px;background:#061017
 }
-
-.metric:nth-child(2){
- border-color:#6b1622;
-}
-
-.metric:nth-child(3),
-.metric:nth-child(4){
- border-color:#087544;
-}
-
-.metric small{
- display:block;
- color:#91a8b1;
-}
-
-.metric strong{
- display:block;
- font-size:21px;
- margin-top:8px;
-}
-
-.blueText{
- color:#27b6ff;
-}
-
-.redText{
- color:#ff5365;
-}
-
-.greenText{
- color:#20f184;
-}
-
+.metric:nth-child(2){border-color:#6b1622}
+.metric:nth-child(3),.metric:nth-child(4){border-color:#087544}
+.metric small{display:block;color:#91a8b1}
+.metric strong{display:block;font-size:21px;margin-top:8px}
+.blueText{color:#27b6ff}.redText{color:#ff5365}.greenText{color:#20f184}
 .bottom{
- display:grid;
- grid-template-columns:1.2fr .8fr .7fr;
- gap:14px;
- margin-top:14px;
+ display:grid;grid-template-columns:1.2fr .8fr .7fr;gap:14px;margin-top:14px
 }
-
-.confirm h2,
-.log h2{
- font-size:19px;
- margin:0 0 12px;
-}
-
+.confirm h2,.log h2{font-size:19px;margin:0 0 12px}
 .confirmRow{
- display:flex;
- justify-content:space-between;
- padding:8px 0;
- color:#d7e4e8;
- border-bottom:1px solid #0d2834;
+ display:flex;justify-content:space-between;padding:8px 0;color:#d7e4e8;
+ border-bottom:1px solid #0d2834
 }
-
-.ok{
- color:var(--green);
- font-weight:800;
-}
-
-.wait{
- color:var(--yellow);
- font-weight:800;
-}
-
-.actions{
- display:grid;
- grid-template-columns:1fr 1fr;
- gap:10px;
-}
-
+.ok{color:var(--green);font-weight:800}
+.wait{color:var(--yellow);font-weight:800}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .actions button{
- min-height:105px;
- border-radius:16px;
- border:1px solid #087d45;
- font-size:22px;
- font-weight:1000;
- color:#fff;
- background:linear-gradient(160deg,#0ad868,#048a40);
+ min-height:105px;border-radius:16px;border:1px solid #087d45;
+ font-size:22px;font-weight:1000;color:#fff;background:linear-gradient(160deg,#0ad868,#048a40)
 }
-
 .actions .sellBtn{
- border-color:#9b1828;
- background:linear-gradient(160deg,#ff3448,#a30f20);
+ border-color:#9b1828;background:linear-gradient(160deg,#ff3448,#a30f20)
 }
-
-.mini{
- display:grid;
- grid-template-columns:1fr 1fr;
- gap:10px;
- margin-top:10px;
-}
-
+.actions button:disabled{opacity:.35}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .mini button{
- min-height:52px;
- border:1px solid #164258;
- border-radius:12px;
- background:#07131a;
- color:#dce8eb;
- font-weight:800;
+ min-height:52px;border:1px solid #164258;border-radius:12px;
+ background:#07131a;color:#dce8eb;font-weight:800
 }
-
-.mini .stop{
- border-color:#8d1b28;
- color:#ff6674;
-}
-
-.status h3{
- margin:0 0 13px;
-}
-
-.stat{
- padding:8px 0;
- display:flex;
- justify-content:space-between;
-}
-
+.mini .stop{border-color:#8d1b28;color:#ff6674}
+.status h3{margin:0 0 13px}
+.stat{padding:8px 0;display:flex;justify-content:space-between}
 .logBox{
- background:#020506;
- border-radius:10px;
- padding:12px;
- min-height:150px;
- color:#b9cbd1;
- font:12px/1.55 monospace;
- white-space:pre-wrap;
- overflow:auto;
+ background:#020506;border-radius:10px;padding:12px;min-height:150px;
+ color:#b9cbd1;font:12px/1.55 monospace;white-space:pre-wrap;overflow:auto
 }
-
-.footer{
- margin-top:14px;
- color:#8fa7b1;
- font-size:12px;
- text-align:center;
-}
-
+.footer{margin-top:14px;color:#8fa7b1;font-size:12px;text-align:center}
 @media(max-width:800px){
- .controls{
-  grid-template-columns:1fr 1fr;
- }
- .layout{
-  grid-template-columns:1fr;
- }
- .signal{
-  min-height:300px;
- }
- .bottom{
-  grid-template-columns:1fr;
- }
- .metrics{
-  grid-template-columns:1fr 1fr;
- }
- .chart{
-  height:350px;
- }
+ .controls{grid-template-columns:1fr 1fr}
+ .layout{grid-template-columns:1fr}
+ .signal{min-height:300px}
+ .bottom{grid-template-columns:1fr}
+ .metrics{grid-template-columns:1fr 1fr}
+ .chart{height:350px}
 }
-
 @media(max-width:480px){
- .app{
-  padding:9px;
- }
- .logo{
-  font-size:19px;
- }
- .online{
-  font-size:12px;
- }
+ .app{padding:9px}.logo{font-size:19px}.online{font-size:12px}
 }
 </style>
 </head>
 
 <body>
-
 <div class="app">
 
 <div class="top">
-
-<div class="logo">
-<span class="crown">♛</span>
-SMC Binance Auto Trader V2
-</div>
-
-<span class="pill" id="modePill">DEMO</span>
-
-<span class="online">
-● Backend:
-<span id="backend">CHECKING</span>
-</span>
-
+ <div class="logo"><span class="crown">♛</span> SMC Binance Auto Trader V2</div>
+ <span class="pill" id="modePill">DEMO</span>
+ <span class="online">● Backend: <span id="backend">CHECKING</span></span>
 </div>
 
 <div class="controls">
 
 <div class="field">
-
 <label>Symbol</label>
-
 <div style="display:flex;gap:7px">
-
 <select id="symbol" style="flex:1"></select>
-
-<button
-id="searchBtn"
-style="
-width:52px;
-border:1px solid #164258;
-border-radius:11px;
-background:#07131a;
-color:#fff;
-font-size:20px
-">
-⌕
-</button>
-
+<button id="searchBtn" style="width:52px;border:1px solid #164258;border-radius:11px;background:#07131a;color:#fff;font-size:20px">⌕</button>
 </div>
-
-<input
-id="search"
-placeholder="Search symbol..."
-style="
-margin-top:6px;
-height:34px;
-font-size:13px
-">
-
+<input id="search" placeholder="Search symbol..." style="margin-top:6px;height:34px;font-size:13px">
 </div>
 
 <div class="field">
-
 <label>Timeframe</label>
-
 <select id="tf">
-
-<option value="1m">
-1 Min
-</option>
-
-<option value="5m" selected>
-5 Min
-</option>
-
-<option value="15m">
-15 Min
-</option>
-
-<option value="30m">
-30 Min
-</option>
-
-<option value="1h">
-1 Hour
-</option>
-
-<option value="2h">
-2 Hour
-</option>
-
-<option value="4h">
-4 Hour
-</option>
-
+<option value="1m">1 Min</option>
+<option value="5m" selected>5 Min</option>
+<option value="15m">15 Min</option>
+<option value="30m">30 Min</option>
+<option value="1h">1 Hour</option>
+<option value="2h">2 Hour</option>
+<option value="4h">4 Hour</option>
 </select>
-
 </div>
 
 <div class="field">
-
 <label>Trade Size (USDT)</label>
-
-<input
-id="size"
-type="number"
-value="20"
-min="1"
-max="20">
-
+<input id="size" type="number" value="20" min="1" max="20">
 </div>
 
 <div class="field">
-
 <label>Mode</label>
-
 <div class="switch">
-
-<button id="demo" class="active">
-DEMO
-</button>
-
-<button disabled>
-LIVE
-</button>
-
+<button id="demo" class="active">DEMO</button>
+<button id="live">LIVE</button>
 </div>
-
 </div>
 
 </div>
 
 <div class="checks">
-
-<span class="check">
-<b>✓</b>EMA 50/200
-</span>
-
-<span class="check">
-<b>✓</b>RSI 14
-</span>
-
-<span class="check">
-<b>✓</b>FVG
-</span>
-
-<span class="check">
-<b>✓</b>Liquidity
-</span>
-
-<span class="check">
-<b>✓</b>BOS/CHoCH
-</span>
-
-<span class="check">
-<b>✓</b>ATR 14
-</span>
+<span class="check"><b>✓</b>EMA 50/200</span>
+<span class="check"><b>✓</b>RSI 14</span>
+<span class="check"><b>✓</b>FVG</span>
+<span class="check"><b>✓</b>Liquidity</span>
+<span class="check"><b>✓</b>BOS/CHoCH</span>
+<span class="check"><b>✓</b>ATR 14</span>
 
 <span class="check" style="margin-left:auto">
-
 AUTO TRADE
-
-<button
-id="auto"
-style="
-border:1px solid #7c202b;
-background:#230b0f;
-color:#ff6b79;
-border-radius:14px;
-padding:4px 12px;
-font-weight:900">
+<button id="auto" style="border:1px solid #7c202b;background:#230b0f;color:#ff6b79;border-radius:14px;padding:4px 12px;font-weight:900">
 OFF
 </button>
-
 </span>
-
 </div>
 
 <div class="layout">
 
 <div class="panel">
-
 <div class="chartHead">
-
 <div>
-
-<span
-class="chartTitle"
-id="chartSymbol">
-BTCUSDT · 5m · Binance
-</span>
-
-<br>
-
-<span
-class="price"
-id="price">
-—
-</span>
-
+<span class="chartTitle" id="chartSymbol">BTCUSDT · 5m · Binance</span><br>
+<span class="price" id="price">—</span>
 </div>
-
-<span id="chartMode">
-LIVE FUTURES MARKET DATA
-</span>
-
+<span id="chartMode">MARKET DATA</span>
 </div>
-
-<div class="chart">
-
-<canvas id="canvas"></canvas>
-
-</div>
-
+<div class="chart"><canvas id="canvas"></canvas></div>
 </div>
 
 <div id="signalCard" class="signal">
-
-<div
-id="signalTitle"
-class="signalTitle">
-🟡 NO SIGNAL
-</div>
-
-<div class="arrow"></div>
-
+<div id="signalTitle" class="signalTitle">🟡 NO SIGNAL</div>
+<div id="arrow" class="arrow">↔</div>
 <div class="conf">
-
 Confidence
-
-<strong id="confidence">
-—
-</strong>
-
+<strong id="confidence">—</strong>
 Trend
-
-<span
-id="trend"
-class="trend">
-—
-</span>
-
+<span id="trend" class="trend">—</span>
 </div>
-
 </div>
 
 </div>
 
 <div class="metrics">
 
-<div class="metric">
-<small>Entry</small>
-<strong id="entry" class="blueText">—</strong>
-</div>
-
-<div class="metric">
-<small>Stop Loss</small>
-<strong id="sl" class="redText">—</strong>
-</div>
-
-<div class="metric">
-<small>TP1</small>
-<strong id="tp1" class="greenText">—</strong>
-</div>
-
-<div class="metric">
-<small>TP2</small>
-<strong id="tp2" class="greenText">—</strong>
-</div>
-
-<div class="metric">
-<small>R:R</small>
-<strong id="rr">1:—</strong>
-</div>
-
-<div class="metric">
-<small>RSI 14</small>
-<strong id="rsi">—</strong>
-</div>
-
-<div class="metric">
-<small>ATR 14</small>
-<strong id="atr">—</strong>
-</div>
-
-<div class="metric">
-<small>Price</small>
-<strong id="price2">—</strong>
-</div>
+<div class="metric"><small>Entry</small><strong id="entry" class="blueText">—</strong></div>
+<div class="metric"><small>Stop Loss</small><strong id="sl" class="redText">—</strong></div>
+<div class="metric"><small>TP1</small><strong id="tp1" class="greenText">—</strong></div>
+<div class="metric"><small>TP2</small><strong id="tp2" class="greenText">—</strong></div>
+<div class="metric"><small>R:R</small><strong id="rr">1:—</strong></div>
+<div class="metric"><small>RSI 14</small><strong id="rsi">—</strong></div>
+<div class="metric"><small>ATR 14</small><strong id="atr">—</strong></div>
+<div class="metric"><small>Price</small><strong id="price2">—</strong></div>
 
 </div>
 
 <div class="bottom">
 
 <div class="panel confirm">
+<h2>SMC Confirmations</h2>
 
-<h2>
-SMC Confirmations
-</h2>
+<div class="confirmRow">Liquidity Grab <span id="liq" class="wait">WAITING</span></div>
+<div class="confirmRow">BOS / CHoCH <span id="bos" class="wait">WAITING</span></div>
+<div class="confirmRow">FVG <span id="fvg" class="wait">WAITING</span></div>
+<div class="confirmRow">FVG Retest <span id="retest" class="wait">WAITING</span></div>
+<div class="confirmRow">EMA 50 / 200 <span id="ema" class="wait">WAITING</span></div>
+<div class="confirmRow">RSI 14 <span id="rsiC" class="wait">WAITING</span></div>
 
-<div class="confirmRow">
-Liquidity Grab
-<span id="liq" class="wait">
-WAITING
-</span>
+<div id="sequence" style="margin-top:10px;color:#8fa7b1">
+Sequence: Liquidity → BOS → FVG → Retest → EMA/RSI
 </div>
-
-<div class="confirmRow">
-BOS / CHoCH
-<span id="bos" class="wait">
-WAITING
-</span>
-</div>
-
-<div class="confirmRow">
-FVG
-<span id="fvg" class="wait">
-WAITING
-</span>
-</div>
-
-<div class="confirmRow">
-FVG Retest
-<span id="retest" class="wait">
-WAITING
-</span>
-</div>
-
-<div class="confirmRow">
-EMA 50 / 200
-<span id="ema" class="wait">
-WAITING
-</span>
-</div>
-
-<div class="confirmRow">
-RSI 14
-<span id="rsiC" class="wait">
-WAITING
-</span>
-</div>
-
-<div
-id="sequence"
-style="
-margin-top:10px;
-color:#8fa7b1">
-Sequence:
-Liquidity →
-BOS →
-FVG →
-Retest →
-EMA/RSI
-</div>
-
 </div>
 
 <div class="panel">
-
 <div class="actions">
-
-<button id="buyBtn">
-↑<br>BUY
-</button>
-
-<button
-id="sellBtn"
-class="sellBtn">
-↓<br>SELL
-</button>
-
+<button id="buyBtn" disabled>↑<br>BUY</button>
+<button id="sellBtn" class="sellBtn" disabled>↓<br>SELL</button>
 </div>
 
 <div class="mini">
-
-<button id="voice">
-🔊 Voice ON
-</button>
-
-<button
-id="stop"
-class="stop">
-■ Emergency STOP
-</button>
-
+<button id="voice">🔊 Voice ON</button>
+<button id="stop" class="stop">■ Emergency STOP</button>
 </div>
-
 </div>
 
 <div class="panel status">
-
-<h3>
-Market Status
-</h3>
+<h3>Market Status</h3>
 
 <div class="stat">
-<span>Volatility</span>
-<b class="greenText">
-NORMAL
-</b>
+<span>Volatility</span><b id="volatility" class="greenText">NORMAL</b>
 </div>
 
 <div class="stat">
-<span>Volume</span>
-<b id="vol">—</b>
+<span>Volume</span><b id="vol">—</b>
 </div>
 
 <div class="stat">
-<span>Spread</span>
-<b class="greenText">
-LOW
-</b>
+<span>Spread</span><b class="greenText">LOW</b>
 </div>
 
-<button
-id="test"
-style="
-width:100%;
-margin-top:12px;
-height:45px;
-border:1px solid #164258;
-border-radius:11px;
-background:#07131a;
-color:#dce8eb;
-font-weight:800">
+<button id="test" style="width:100%;margin-top:12px;height:45px;border:1px solid #164258;border-radius:11px;background:#07131a;color:#dce8eb;font-weight:800">
 Test Backend
 </button>
-
 </div>
 
 </div>
 
 <div class="panel log">
-
-<h2>
-System Log
-</h2>
-
-<div
-id="log"
-class="logBox">
-</div>
-
+<h2>System Log</h2>
+<div id="log" class="logBox"></div>
 </div>
 
 <div class="footer">
-DEMO FIRST — SMC markers use CLOSED candles only.
-AUTO TRADE requires the complete sequence.
+SMC Binance Auto Trader V2 — Closed-candle analysis only.
 </div>
 
 </div>
 
 <script>
+"use strict";
+
+/* =========================
+   CONFIG
+========================= */
+
+const API = location.origin;
+
+const LIVE_MARKET = "https://fapi.binance.com";
+const DEMO_MARKET = "https://demo-fapi.binance.com";
+
+let mode = "DEMO";
+let symbols = [];
+let candles = [];
+let analysis = null;
+let auto = false;
+let voiceOn = true;
+let lastSignalKey = "";
+let loading = false;
+
+/* =========================
+   HELPERS
+========================= */
+
+const $ = id => document.getElementById(id);
+
+function log(message){
+ const box = $("log");
+ const time = new Date().toLocaleTimeString();
+ box.textContent =
+   `[${time}] ${message}\n` + box.textContent;
+ box.textContent = box.textContent.slice(0,7000);
+}
+
+function setBackend(text,good=false){
+ $("backend").textContent = text;
+ $("backend").style.color = good ? "#00f07a" : "#ffd21c";
+}
+
+function fmt(n){
+ if(n === null || n === undefined || !Number.isFinite(Number(n))) return "—";
+ n = Number(n);
+ if(Math.abs(n)>=1000) return n.toLocaleString(undefined,{maximumFractionDigits:2});
+ if(Math.abs(n)>=1) return n.toFixed(4);
+ return n.toFixed(6);
+}
+
+function sleep(ms){
+ return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+function speak(text){
+ if(!voiceOn || !("speechSynthesis" in window)) return;
+ try{
+   speechSynthesis.cancel();
+   const u = new SpeechSynthesisUtterance(text);
+   u.rate = 1;
+   u.pitch = 1;
+   speechSynthesis.speak(u);
+ }catch(e){}
+}
+
+/* =========================
+   BACKEND
+========================= */
+
+async function backendStatus(){
+ try{
+   const r = await fetch(API+"/api/status",{cache:"no-store"});
+   if(!r.ok) throw new Error("HTTP "+r.status);
+
+   const d = await r.json();
+
+   setBackend(
+     d.mode ? "ONLINE · "+d.mode : "ONLINE",
+     true
+   );
+
+   if(d.mode){
+     mode = String(d.mode).toUpperCase();
+     updateModeUI();
+   }
+
+   return d;
+ }catch(e){
+   setBackend("OFFLINE",false);
+   log("Backend connection failed: "+e.message);
+   return null;
+ }
+}
+
+async function testBackend(){
+ log("Testing backend...");
+
+ try{
+   const r = await fetch(API+"/health",{cache:"no-store"});
+   const d = await r.json();
+
+   log("Health: "+JSON.stringify(d));
+
+   const s = await backendStatus();
+
+   if(s){
+     log("Backend test: OK");
+   }
+ }catch(e){
+   log("Backend test ERROR: "+e.message);
+   setBackend("OFFLINE",false);
+ }
+}
+
+/* =========================
+   MODE
+========================= */
+
+function updateModeUI(){
+
+ $("modePill").textContent = mode;
+
+ if(mode === "LIVE"){
+   $("modePill").style.color = "#ff5365";
+   $("modePill").style.borderColor = "#9b1828";
+   $("modePill").style.background = "#26080c";
+   $("chartMode").textContent = "LIVE FUTURES MARKET DATA";
+   $("live").classList.add("active");
+   $("demo").classList.remove("active");
+ }else{
+   $("modePill").style.color = "#21c7ff";
+   $("modePill").style.borderColor = "#0877a8";
+   $("modePill").style.background = "#062335";
+   $("chartMode").textContent = "DEMO FUTURES MARKET DATA";
+   $("demo").classList.add("active");
+   $("live").classList.remove("active");
+ }
+}
+
+async function requestMode(target){
+
+ target = target.toUpperCase();
+
+ if(target === "LIVE"){
+   const ok = confirm(
+     "LIVE mode uses real Binance Futures data and may use real funds when AUTO TRADE is enabled.\n\nContinue?"
+   );
+
+   if(!ok) return;
+ }
+
+ try{
+   const r = await fetch(API+"/api/status",{cache:"no-store"});
+   const d = await r.json();
+
+   const serverMode = String(d.mode || "DEMO").toUpperCase();
+
+   if(target === "LIVE" && serverMode !== "LIVE"){
+     log("LIVE requested, but backend is still "+serverMode);
+     alert("Backend is not in LIVE mode yet. Check Render environment variables and redeploy.");
+     return;
+   }
+
+   mode = target;
+   updateModeUI();
+   log("Market mode: "+mode);
+
+   await loadSymbols();
+   await loadData();
+
+ }catch(e){
+   log("Mode change error: "+e.message);
+ }
+}
+
+/* =========================
+   BINANCE PUBLIC MARKET DATA
+========================= */
+
+function marketBase(){
+ return mode === "LIVE" ? LIVE_MARKET : DEMO_MARKET;
+}
+
+async function binance(path){
+
+ const url = marketBase()+path;
+
+ const r = await fetch(url,{
+   cache:"no-store"
+ });
+
+ if(!r.ok){
+   throw new Error("Binance HTTP "+r.status);
+ }
+
+ return r.json();
+}
+
+async function loadSymbols(){
+
+ try{
+
+   const d = await binance("/fapi/v1/exchangeInfo");
+
+   symbols = (d.symbols || [])
+     .filter(x =>
+       x.status === "TRADING" &&
+       x.quoteAsset === "USDT" &&
+       x.contractType === "PERPETUAL"
+     )
+     .map(x=>x.symbol)
+     .sort();
+
+   renderSymbols();
+
+   log("Loaded "+symbols.length+" USDT perpetual symbols.");
+
+ }catch(e){
+
+   log("Symbol loading error: "+e.message);
+
+   const fallback = ["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT"];
+   symbols = fallback;
+   renderSymbols();
+ }
+}
+
+function renderSymbols(){
+
+ const select = $("symbol");
+ const q = $("search").value.trim().toUpperCase();
+
+ const list = q
+   ? symbols.filter(s=>s.includes(q))
+   : symbols;
+
+ select.innerHTML = "";
+
+ list.slice(0,700).forEach(s=>{
+
+   const o = document.createElement("option");
+   o.value = s;
+   o.textContent = s;
+
+   if(s === "BTCUSDT") o.selected = true;
+
+   select.appendChild(o);
+ });
+
+ if(!select.value && list.length){
+   select.value = list[0];
+ }
+}
+
+/* =========================
+   KLINES
+========================= */
+
+async function loadData(){
+
+ if(loading) return;
+
+ loading = true;
+
+ try{
+
+   const symbol = $("symbol").value || "BTCUSDT";
+   const tf = $("tf").value;
+
+   const d = await binance(
+     `/fapi/v1/klines?symbol=${encodeURIComponent(symbol)}&interval=${encodeURIComponent(tf)}&limit=250`
+   );
+
+   candles = d.map(k=>({
+     time:Number(k[0]),
+     open:Number(k[1]),
+     high:Number(k[2]),
+     low:Number(k[3]),
+     close:Number(k[4]),
+     volume:Number(k[5]),
+     closed:Date.now() >= Number(k[6])
+   }));
+
+   if(candles.length < 60){
+     log("Not enough candles.");
+     return;
+   }
+
+   $("chartSymbol").textContent =
+     `${symbol} · ${tf} · Binance`;
+
+   const last = candles[candles.length-1];
+
+   $("price").textContent = fmt(last.close);
+   $("price2").textContent = fmt(last.close);
+   $("vol").textContent = Number(last.volume).toFixed(2);
+
+   drawChart();
+
+   analysis = analyze(candles);
+
+   updateUI(analysis);
+
+ }catch(e){
+
+   log("Market data error: "+e.message);
+
+ }finally{
+   loading = false;
+ }
+}
+
+/* =========================
+   INDICATORS
+========================= */
+
+function ema(values,period){
+
+ if(values.length < period) return [];
+
+ const k = 2/(period+1);
+ let prev = values
+   .slice(0,period)
+   .reduce((a,b)=>a+b,0)/period;
+
+ const out = new Array(period-1).fill(null);
+ out.push(prev);
+
+ for(let i=period;i<values.length;i++){
+   prev = values[i]*k + prev*(1-k);
+   out.push(prev);
+ }
+
+ return out;
+}
+
+function rsi(values,period=14){
+
+ if(values.length <= period) return [];
+
+ let gains=0;
+ let losses=0;
+
+ for(let i=1;i<=period;i++){
+   const diff=values[i]-values[i-1];
+   if(diff>=0) gains+=diff;
+   else losses-=diff;
+ }
+
+ let avgGain=gains/period;
+ let avgLoss=losses/period;
+
+ const out=new Array(period).fill(null);
+
+ function calc(){
+   if(avgLoss===0) return 100;
+   const rs=avgGain/avgLoss;
+   return 100-(100/(1+rs));
+ }
+
+ out.push(calc());
+
+ for(let i=period+1;i<values.length;i++){
+
+   const diff=values[i]-values[i-1];
+   const gain=Math.max(diff,0);
+   const loss=Math.max(-diff,0);
+
+   avgGain=((avgGain*(period-1))+gain)/period;
+   avgLoss=((avgLoss*(period-1))+loss)/period;
+
+   out.push(calc());
+ }
+
+ return out;
+}
+
+function atr(data,period=14){
+
+ if(data.length<=period) return [];
+
+ const trs=[];
+
+ for(let i=0;i<data.length;i++){
+
+   if(i===0){
+     trs.push(data[i].high-data[i].low);
+   }else{
+     const h=data[i].high;
+     const l=data[i].low;
+     const pc=data[i-1].close;
+
+     trs.push(
+       Math.max(
+         h-l,
+         Math.abs(h-pc),
+         Math.abs(l-pc)
+       )
+     );
+   }
+ }
+
+ let sum=0;
+
+ for(let i=0;i<period;i++) sum+=trs[i];
+
+ let prev=sum/period;
+
+ const out=new Array(period-1).fill(null);
+ out.push(prev);
+
+ for(let i=period;i<trs.length;i++){
+   prev=((prev*(period-1))+trs[i])/period;
+   out.push(prev);
+ }
+
+ return out;
+}
+
+/* =========================
+   SMC ENGINE
+========================= */
+
+function isBull(c){
+ return c.close > c.open;
+}
+
+function isBear(c){
+ return c.close < c.open;
+}
+
+/*
+ Liquidity:
+ BUY = price sweeps a recent low but closes back above it.
+ SELL = price sweeps a recent high but closes back below it.
+*/
+
+function findLiquidity(c,i,lookback=8){
+
+ if(i<lookback) return null;
+
+ let low=Infinity;
+ let high=-Infinity;
+
+ for(let j=i-lookback;j<i;j++){
+   low=Math.min(low,c[j].low);
+   high=Math.max(high,c[j].high);
+ }
+
+ const x=c[i];
+
+ if(x.low < low && x.close > low){
+   return {
+     side:"BUY",
+     index:i,
+     level:low
+   };
+ }
+
+ if(x.high > high && x.close < high){
+   return {
+     side:"SELL",
+     index:i,
+     level:high
+   };
+ }
+
+ return null;
+}
+
+/*
+ BOS / CHoCH:
+ after liquidity, look for close through local swing.
+*/
+
+function findStructure(c,start,side,maxBars=18){
+
+ const end=Math.min(c.length-2,start+maxBars);
+
+ for(let i=start+1;i<=end;i++){
+
+   let priorHigh=-Infinity;
+   let priorLow=Infinity;
+
+   const from=Math.max(0,i-5);
+
+   for(let j=from;j<i;j++){
+     priorHigh=Math.max(priorHigh,c[j].high);
+     priorLow=Math.min(priorLow,c[j].low);
+   }
+
+   if(side==="BUY" && c[i].close>priorHigh){
+     return {
+       index:i,
+       side,
+       level:priorHigh
+     };
+   }
+
+   if(side==="SELL" && c[i].close<priorLow){
+     return {
+       index:i,
+       side,
+       level:priorLow
+     };
+   }
+ }
+
+ return null;
+}
+
+/*
+ Fair Value Gap:
+ Bullish: current low > candle two bars back high.
+ Bearish: current high < candle two bars back low.
+*/
+
+function findFVG(c,start,side,maxBars=12){
+
+ const end=Math.min(c.length-2,start+maxBars);
+
+ for(let i=start+2;i<=end;i++){
+
+   const a=c[i-2];
+   const b=c[i-1];
+   const d=c[i];
+
+   if(side==="BUY" && d.low>a.high){
+
+     return {
+       index:i,
+       side,
+       low:a.high,
+       high:d.low
+     };
+   }
+
+   if(side==="SELL" && d.high<a.low){
+
+     return {
+       index:i,
+       side,
+       low:d.high,
+       high:a.low
+     };
+   }
+ }
+
+ return null;
+}
+
+function findRetest(c,fvg,maxBars=18){
+
+ if(!fvg) return null;
+
+ const end=Math.min(c.length-1,fvg.index+maxBars);
+
+ for(let i=fvg.index+1;i<=end;i++){
+
+   const x=c[i];
+
+   if(
+     x.low<=fvg.high &&
+     x.high>=fvg.low
+   ){
+     return {
+       index:i,
+       price:x.close
+     };
+   }
+ }
+
+ return null;
+}
+
+function analyze(c){
+
+ /*
+  Use only CLOSED candles.
+ */
+ const closed=c.filter(x=>x.closed);
+
+ if(closed.length<80){
+   return {
+     signal:null,
+     reason:"Waiting for closed candles"
+   };
+ }
+
+ const closes=closed.map(x=>x.close);
+
+ const e50=ema(closes,50);
+ const e200=ema(closes,200);
+ const rs=rsi(closes,14);
+ const at=atr(closed,14);
+
+ const i=closed.length-1;
+
+ const ema50=e50[i];
+ const ema200=e200[i];
+ const rsiNow=rs[rs.length-1];
+ const atrNow=at[at.length-1];
+
+ let setup=null;
+
+ /*
+  Search recent liquidity events.
+  This prevents waiting forever for the
+  newest candle only.
+ */
+ const start=Math.max(20,i-70);
+
+ for(let liqIndex=start;liqIndex<i-2;liqIndex++){
+
+   const liq=findLiquidity(closed,liqIndex,8);
+
+   if(!liq) continue;
+
+   const bos=findStructure(
+     closed,
+     liq.index,
+     liq.side,
+     18
+   );
+
+   if(!bos) continue;
+
+   const fvg=findFVG(
+     closed,
+     bos.index,
+     liq.side,
+     12
+   );
+
+   if(!fvg) continue;
+
+   const retest=findRetest(
+     closed,
+     fvg,
+     18
+   );
+
+   if(!retest) continue;
+
+   setup={
+     liquidity:liq,
+     bos,
+     fvg,
+     retest
+   };
+ }
+
+ let direction=null;
+
+ if(ema50 && ema200){
+   if(ema50>ema200) direction="BUY";
+   if(ema50<ema200) direction="SELL";
+ }
+
+ const emaOk=
+   setup &&
+   direction===setup.liquidity.side;
+
+ let rsiOk=false;
+
+ if(setup && setup.liquidity.side==="BUY"){
+   rsiOk=rsiNow>50;
+ }
+
+ if(setup && setup.liquidity.side==="SELL"){
+   rsiOk=rsiNow<50;
+ }
+
+ let signal=null;
+
+ if(
+   setup &&
+   emaOk &&
+   rsiOk &&
+   atrNow &&
+   Number.isFinite(atrNow)
+ ){
+
+   signal=setup.liquidity.side;
+ }
+
+ /*
+  If a full setup exists but current candle is
+  no longer valid, keep the structure visible
+  but don't trade.
+ */
+
+ return {
+   signal,
+   setup,
+   ema50,
+   ema200,
+   rsi:rsiNow,
+   atr:atrNow,
+   direction,
+   closed
+ };
+}
+
+/* =========================
+   UI
+========================= */
+
+function setConfirm(id,ok,text="CONFIRMED"){
+
+ const el=$(id);
+
+ el.textContent=ok ? text : "WAITING";
+
+ el.className=ok ? "ok" : "wait";
+}
+
+function resetSignal(){
+
+ $("signalCard").className="signal";
+ $("signalTitle").textContent="🟡 NO SIGNAL";
+ $("arrow").textContent="↔";
+ $("confidence").textContent="—";
+ $("trend").textContent="—";
+
+ $("entry").textContent="—";
+ $("sl").textContent="—";
+ $("tp1").textContent="—";
+ $("tp2").textContent="—";
+ $("rr").textContent="1:—";
+}
+
+function updateUI(a){
+
+ if(!a) return;
+
+ $("rsi").textContent=fmt(a.rsi);
+ $("atr").textContent=fmt(a.atr);
+
+ const setup=a.setup;
+
+ setConfirm("liq",!!setup?.liquidity);
+ setConfirm("bos",!!setup?.bos);
+ setConfirm("fvg",!!setup?.fvg);
+ setConfirm("retest",!!setup?.retest);
+
+ const emaOK=
+   !!a.direction &&
+   !!setup &&
+   a.direction===setup.liquidity.side;
+
+ const rsiOK=
+   !!setup &&
+   (
+     setup.liquidity.side==="BUY"
+       ? a.rsi>50
+       : a.rsi<50
+   );
+
+ setConfirm("ema",emaOK);
+ setConfirm("rsiC",rsiOK);
+
+ if(a.direction){
+   $("trend").textContent=a.direction;
+ }else{
+   $("trend").textContent="NEUTRAL";
+ }
+
+ resetSignal();
+
+ if(!a.signal){
+
+   $("buyBtn").disabled=true;
+   $("sellBtn").disabled=true;
+
+   $("sequence").textContent =
+     "Sequence: Liquidity → BOS → FVG → Retest → EMA/RSI";
+
+   return;
+ }
+
+ const side=a.signal;
+ const entry=a.closed[a.closed.length-1].close;
+ const risk=Math.max(a.atr*1.2,entry*0.001);
+
+ let sl,tp1,tp2;
+
+ if(side==="BUY"){
+   sl=entry-risk;
+   tp1=entry+risk;
+   tp2=entry+risk*2;
+ }else{
+   sl=entry+risk;
+   tp1=entry-risk;
+   tp2=entry-risk*2;
+ }
+
+ const rr=Math.abs(tp2-entry)/Math.abs(entry-sl);
+
+ $("signalCard").className=
+   "signal "+(side==="BUY"?"buy":"sell");
+
+ $("signalTitle").textContent=
+   side==="BUY" ? "🟢 BUY SIGNAL" : "🔴 SELL SIGNAL";
+
+ $("arrow").textContent=
+   side==="BUY" ? "↑" : "↓";
+
+ $("confidence").textContent="100%";
+ $("trend").textContent=side;
+
+ $("entry").textContent=fmt(entry);
+ $("sl").textContent=fmt(sl);
+ $("tp1").textContent=fmt(tp1);
+ $("tp2").textContent=fmt(tp2);
+ $("rr").textContent="1:"+rr.toFixed(2);
+
+ $("buyBtn").disabled=side!=="BUY";
+ $("sellBtn").disabled=side!=="SELL";
+
+ $("sequence").textContent=
+   "COMPLETE: Liquidity → BOS → FVG → Retest → EMA/RSI";
+
+ const key=
+   `${$("symbol").value}_${$("tf").value}_${side}_${a.closed[a.closed.length-1].time}`;
+
+ if(key!==lastSignalKey){
+
+   lastSignalKey=key;
+
+   log(
+     `${side} COMPLETE SMC SIGNAL | Entry ${fmt(entry)} | SL ${fmt(sl)} | TP2 ${fmt(tp2)}`
+   );
+
+   speak(
+     side==="BUY"
+       ? "SMC Buy signal"
+       : "SMC Sell signal"
+   );
+
+   if(auto){
+     executeSignal(side,entry,sl,tp2,key);
+   }
+ }
+}
+
+/* =========================
+   AUTO TRADE
+========================= */
+
+async function toggleAuto(){
+
+ if(!auto){
+
+   const ok=confirm(
+     "AUTO TRADE will allow the backend to execute complete SMC signals.\n\nContinue?"
+   );
+
+   if(!ok) return;
+ }
+
+ auto=!auto;
+
+ $("auto").textContent=auto?"ON":"OFF";
+
+ if(auto){
+   $("auto").style.background="#064d2b";
+   $("auto").style.color="#00f07a";
+   log("AUTO TRADE ON");
+ }else{
+   $("auto").style.background="#230b0f";
+   $("auto").style.color="#ff6b79";
+   log("AUTO TRADE OFF");
+ }
+
+ try{
+   await fetch(API+"/api/auto",{
+     method:"POST",
+     headers:{"Content-Type":"application/json"},
+     body:JSON.stringify({enabled:auto})
+   });
+ }catch(e){
+   log("Auto backend error: "+e.message);
+ }
+}
+
+async function executeSignal(side,entry,sl,tp2,key){
+
+ try{
+
+   const r=await fetch(API+"/api/execute-signal",{
+     method:"POST",
+     headers:{"Content-Type":"application/json"},
+     body:JSON.stringify({
+       symbol:$("symbol").value,
+       side,
+       entry,
+       stop_loss:sl,
+       take_profit:tp2,
+       size:Number($("size").value),
+       signal_key:key
+     })
+   });
+
+   const d=await r.json();
+
+   log("AUTO RESPONSE: "+JSON.stringify(d));
+
+ }catch(e){
+
+   log("AUTO TRADE ERROR: "+e.message);
+
+ }
+}
+
+/* =========================
+   MANUAL BUTTONS
+========================= */
+
+$("buyBtn").onclick=()=>{
+
+ if(!analysis?.signal || analysis.signal!=="BUY") return;
+
+ const c=analysis.closed[analysis.closed.length-1];
+ const risk=Math.max(analysis.atr*1.2,c.close*0.001);
+
+ executeSignal(
+   "BUY",
+   c.close,
+   c.close-risk,
+   c.close+risk*2,
+   "MANUAL_"+Date.now()
+ );
+};
+
+$("sellBtn").onclick=()=>{
+
+ if(!analysis?.signal || analysis.signal!=="SELL") return;
+
+ const c=analysis.closed[analysis.closed.length-1];
+ const risk=Math.max(analysis.atr*1.2,c.close*0.001);
+
+ executeSignal(
+   "SELL",
+   c.close,
+   c.close+risk,
+   c.close-risk*2,
+   "MANUAL_"+Date.now()
+ );
+};
+
+/* =========================
+   EMERGENCY STOP
+========================= */
+
+$("stop").onclick=async()=>{
+
+ const ok=confirm(
+   "Emergency STOP?\n\nThis disables new automatic trades."
+ );
+
+ if(!ok) return;
+
+ auto=false;
+ $("auto").textContent="OFF";
+ $("auto").style.background="#230b0f";
+ $("auto").style.color="#ff6b79";
+
+ try{
+
+   const r=await fetch(API+"/api/emergency-stop",{
+     method:"POST"
+   });
+
+   const d=await r.json();
+
+   log("EMERGENCY STOP: "+JSON.stringify(d));
+
+ }catch(e){
+
+   log("Emergency stop error: "+e.message);
+
+ }
+};
+
+/* =========================
+   VOICE
+========================= */
+
+$("voice").onclick=()=>{
+
+ voiceOn=!voiceOn;
+
+ $("voice").textContent=
+   voiceOn ? "🔊 Voice ON" : "🔇 Voice OFF";
+
+ if(voiceOn){
+   speak("Voice enabled");
+ }
+};
+
+/* =========================
+   CHART
+========================= */
+
+function drawChart(){
+
+ const canvas=$("canvas");
+ const box=canvas.parentElement;
+
+ const dpr=window.devicePixelRatio||1;
+ const w=box.clientWidth;
+ const h=box.clientHeight;
+
+ canvas.width=w*dpr;
+ canvas.height=h*dpr;
+
+ const ctx=canvas.getContext("2d");
+
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+
+ ctx.clearRect(0,0,w,h);
+
+ const data=candles
+   .filter(x=>x.closed)
+   .slice(-90);
+
+ if(!data.length) return;
+
+ let min=Infinity;
+ let max=-Infinity;
+
+ data.forEach(c=>{
+   min=Math.min(min,c.low);
+   max=Math.max(max,c.high);
+ });
+
+ const pad=(max-min)*0.08;
+ min-=pad;
+ max+=pad;
+
+ const left=42;
+ const right=10;
+ const top=15;
+ const bottom=25;
+
+ const cw=(w-left-right)/data.length;
+
+ function y(price){
+   return top+(max-price)/(max-min)*(h-top-bottom);
+ }
+
+ /* grid */
+
+ ctx.strokeStyle="#0d2a36";
+ ctx.lineWidth=1;
+
+ for(let i=0;i<5;i++){
+
+   const yy=top+i*(h-top-bottom)/4;
+
+   ctx.beginPath();
+   ctx.moveTo(left,yy);
+   ctx.lineTo(w-right,yy);
+   ctx.stroke();
+ }
+
+ /* candles */
+
+ data.forEach((c,i)=>{
+
+   const x=left+i*cw+cw/2;
+
+   ctx.strokeStyle=
+     c.close>=c.open ? "#00f07a" : "#ff3145";
+
+   ctx.fillStyle=ctx.strokeStyle;
+
+   ctx.beginPath();
+   ctx.moveTo(x,y(c.high));
+   ctx.lineTo(x,y(c.low));
+   ctx.stroke();
+
+   const oy=y(c.open);
+   const cy=y(c.close);
+
+   const body=Math.max(2,Math.abs(cy-oy));
+
+   ctx.fillRect(
+     x-cw*.30,
+     Math.min(oy,cy),
+     cw*.60,
+     body
+   );
+ });
+
+ /* EMA lines */
+
+ if(analysis){
+
+   const closes=data.map(c=>c.close);
+
+   const e50=ema(closes,50);
+   const e200=ema(closes,200);
+
+   function drawLine(arr,stroke){
+
+     ctx.strokeStyle=stroke;
+     ctx.lineWidth=1.5;
+     ctx.beginPath();
+
+     let started=false;
+
+     arr.forEach((v,i)=>{
+
+       if(v===null || v===undefined) return;
+
+       const x=left+i*cw+cw/2;
+
+       if(!started){
+         ctx.moveTo(x,y(v));
+         started=true;
+       }else{
+         ctx.lineTo(x,y(v));
+       }
+     });
+
+     ctx.stroke();
+   }
+
+   drawLine(e50,"#18a8ff");
+   drawLine(e200,"#ffd21c");
+ }
+
+ /* SMC markers */
+
+ if(analysis?.setup){
+
+   const s=analysis.setup;
+
+   function marker(index,label,stroke){
+
+     const local=data.findIndex(
+       x=>x.time===s.closedTime
+     );
+
+     if(index<0 || index>=candles.length) return;
+
+     const target=candles[index];
+     const di=data.findIndex(x=>x.time===target.time);
+
+     if(di<0) return;
+
+     const x=left+di*cw+cw/2;
+
+     ctx.fillStyle=stroke;
+     ctx.font="bold 11px Arial";
+     ctx.fillText(label,x-25,y(target.high)-12);
+
+     ctx.strokeStyle=stroke;
+     ctx.beginPath();
+     ctx.arc(x,y(target.high)-6,4,0,Math.PI*2);
+     ctx.stroke();
+   }
+
+   marker(s.liquidity.index,"LIQ","#ffd21c");
+   marker(s.bos.index,"BOS","#18a8ff");
+   marker(s.fvg.index,"FVG","#d34cff");
+   marker(s.retest.index,"RETEST","#00f07a");
+ }
+
+ /* price */
+
+ const last=data[data.length-1];
+
+ ctx.fillStyle="#00f07a";
+ ctx.font="12px Arial";
+ ctx.fillText(
+   fmt(last.close),
+   5,
+   y(last.close)+4
+ );
+}
+
+/* =========================
+   EVENTS
+========================= */
+
+$("test").onclick=testBackend;
+
+$("auto").onclick=toggleAuto;
+
+$("search").addEventListener("input",renderSymbols);
+
+$("searchBtn").onclick=renderSymbols;
+
+$("symbol").addEventListener("change",async()=>{
+ lastSignalKey="";
+ await loadData();
+});
+
+$("tf").addEventListener("change",async()=>{
+ lastSignalKey="";
+ await loadData();
+});
+
+$("demo").onclick=()=>requestMode("DEMO");
+
+$("live").onclick=()=>requestMode("LIVE");
+
+window.addEventListener("resize",drawChart);
+
+/* =========================
+   STARTUP
+========================= */
+
+async function start(){
+
+ log("SMC Binance Auto Trader V2 starting...");
+
+ await backendStatus();
+
+ await loadSymbols();
+
+ await loadData();
+
+ log("System ready.");
+
+ setInterval(async()=>{
+
+   await backendStatus();
+   await loadData();
+
+ },15000);
+}
+
+start();
+
+</script>
+</body>
+</html>
