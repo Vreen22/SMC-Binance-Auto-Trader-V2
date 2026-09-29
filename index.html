@@ -1554,3 +1554,17 @@ start();
 </script>
 </body>
 </html>
+async function start(){
+  ...
+  await backendStatus();
+  await loadSymbols();
+  await loadData();
+  log("System ready.");
+  ...
+}
+
+start();
+
+</script>
+</body>
+</html>
